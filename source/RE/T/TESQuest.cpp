@@ -30,7 +30,9 @@ namespace RE
 	bool TESQuest::EnsureQuestStarted(bool& a_result, bool a_startNow)
 	{
 		using func_t = decltype(&TESQuest::EnsureQuestStarted);
-		REL::Relocation<func_t> func{ Offset::TESQuest::EnsureQuestStarted };
+		// ng 6.7.1 移除了 CommonLibVR 内部的 Offset:: 命名空间，改用 RELOCATION_ID(SE,AE)。
+		// 取自 ng 自带 src/RE/T/TESQuest.cpp（TESQuest::EnsureQuestStarted）。
+		REL::Relocation<func_t> func{ RELOCATION_ID(24481, 25003) };
 		return func(this, a_result, a_startNow);
 	}
 
@@ -77,7 +79,8 @@ namespace RE
 	void TESQuest::Reset()
 	{
 		using func_t = decltype(&TESQuest::Reset);
-		REL::Relocation<func_t> func{ Offset::TESQuest::ResetQuest };
+		// ng 的 TESQuest::Reset()（旧 CommonLibVR 的 Offset::TESQuest::ResetQuest）。
+		REL::Relocation<func_t> func{ RELOCATION_ID(24486, 25014) };
 		return func(this);
 	}
 

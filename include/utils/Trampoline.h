@@ -16,15 +16,14 @@ namespace hooks
 
 		static constexpr std::size_t getSizeForSrc()
 		{
-			// Reference: write_5branch() and write_6branch() of Trampoline.h
+			// 参考 Trampoline.h 的 write_5branch() 与 write_6branch()。
 			if constexpr (SrcSize == 5)
 			{
 #pragma pack(push, 1)
-				// FF /4
-				// JMP r/m64
+				// FF /4：JMP r/m64。
 				struct TrampolineAssembly
 				{
-					// jmp [rip]
+					// 跳转到 [rip]。
 					std::uint8_t jmp;	 // 0 - 0xFF
 					std::uint8_t modrm;	 // 1 - 0x25
 					std::int32_t disp;	 // 2 - 0x00000000
@@ -138,11 +137,11 @@ namespace hooks
 	{
 	public:
 
-		// Reference: BranchTrampoline::Create() of https://github.com/ianpatt/skse64/blob/master/skse64_common/BranchTrampoline.cpp
+		// 参考 SKSE 的 BranchTrampoline::Create()。
 		CustomTrampoline(const std::string_view& a_name, void* a_module, std::size_t a_size) :
 			Trampoline{ a_name }
 		{
-			// search backwards from module base
+			// 从模块基址向低地址查找。
 			auto moduleBase = reinterpret_cast<std::uintptr_t>(a_module);
 			std::uintptr_t addr = moduleBase;
 			std::uintptr_t maxDisplacement = 0x80000000 - (1024 * 1024 * 128);	// largest 32-bit displacement with 128MB scratch space
@@ -162,17 +161,17 @@ namespace hooks
 
 				if (info.State == MEM_FREE)
 				{
-					// free block, big enough?
+					// 仅使用足够大的空闲块。
 					if (info.RegionSize >= a_size)
 					{
-						// try to allocate it
+						// 从空闲块末端尝试分配。
 						addr = reinterpret_cast<std::uintptr_t>(info.BaseAddress) + info.RegionSize - a_size;
 
 						base = VirtualAlloc(reinterpret_cast<void*>(addr), a_size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 					}
 				}
 
-				// move back and try again
+				// 继续向低地址查找。
 				if (!base)
 				{
 					addr = ((uintptr_t)info.BaseAddress) - 1;
@@ -187,7 +186,10 @@ namespace hooks
 			inst->set_trampoline(base, a_size,
 				[](void* a_mem, std::size_t)
 				{
-					SKSE::WinAPI::VirtualFree(a_mem, 0, MEM_RELEASE);
+					// ng 6.7.1 移除了 SKSE::WinAPI，改用 REX::W32；但本文件周边已直接用
+					// windows.h 的 MODULEINFO/GetModuleInformation，且 pch.h 已 #include <Windows.h>，
+					// 故这里直接用原生 VirtualFree/MEM_RELEASE，最省事也最一致。
+					VirtualFree(a_mem, 0, MEM_RELEASE);
 				});
 		}
 	};
@@ -197,7 +199,7 @@ namespace hooks
 	public:
 
 		 template <SKSE::stl::nttp::string str>
-		static std::uintptr_t FindPattern(SKSE::WinAPI::HMODULE a_moduleHandle)
+		static std::uintptr_t FindPattern(HMODULE a_moduleHandle)
 		{
 			MODULEINFO moduleInfo;
 			GetModuleInformation(GetCurrentProcess(), reinterpret_cast<HMODULE>(a_moduleHandle), &moduleInfo, sizeof(MODULEINFO));
