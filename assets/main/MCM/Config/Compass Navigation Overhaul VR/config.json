@@ -1,0 +1,234 @@
+{
+	"modName": "Compass Navigation Overhaul VR",
+	"displayName": "Compass Navigation Overhaul VR",
+	"customContent": {
+		"source": "MCM/Compass Navigation Overhaul VR/splashart.swf"
+	},
+	"pages": [
+		{
+			"pageDisplayName": "Compass",
+			"cursorFillMode": "topToBottom",
+			"content": [
+				{
+					"text": "Markers ",
+					"type": "header"
+				},
+				{
+					"id": "uUndiscoveredLocationMarkers:Display",
+					"text": "Undiscovered Locations",
+					"help": "Select how undiscovered map markers are displayed.\nDefault: Hidden",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "Hidden", "\"?\" Marker", "Normal Marker" ],
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "bShowEnemyMarkers:Display",
+					"text": "Show Enemies",
+					"help": "Default: Enabled",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowInteriorMarkers:Display",
+					"text": "Show through Portals",
+					"help": "Shows location and enemies through portals, for example cities, from the outside.\nDefault: Enabled",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"text": "Control ",
+					"type": "header"
+				},
+				{
+					"id": "fAngleToShowMarkerDetails:Display",
+					"text": "Start Cone of Vision",
+					"help": "Angle to the compass center to start showing marker details.\nDefault: 10º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fAngleToKeepMarkerDetailsShown:Display",
+					"text": "Stop Cone of Vision",
+					"help": "Angle to the compass center to stop showing marker details once shown.\nDefault: 35º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fFocusingDelayToShow:Display",
+					"text": "Cone of Vision Delay",
+					"help": "Delay to show the centered marker details.\nDefault: 0.1 s",
+					"type": "slider",
+					"valueOptions": {
+						"min": 0.05,
+						"max": 3.0,
+						"step": 0.05,
+						"formatString": "{2} s",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"text": "Markers Extra Info",
+					"type": "header",
+					"position": 1
+				},
+				{
+					"id": "bShowUndiscoveredLocationInfo:Display",
+					"text": "Show Undiscovered Location Info",
+					"help": "Hide/show distance and name for undiscovered location markers.\nDefault: Disabled",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowEnemyNameUnderMarker:Display",
+					"text": "Show Enemy Names",
+					"help": "Show enemy name under the compass enemy marker when not in direct combat.\nDefault: Enabled",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUseMetricUnits:Display",
+					"text": "Units",
+					"help": "Use metric or imperial units.\nDefault: Metric",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "Imperial", "Metric" ],
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowObjectiveAsTarget:Display",
+					"text": "Quest Info Displayed",
+					"help": "Changes the text under the compass quest marker to show the location or the objective.\nDefault: Objective",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "Location", "Objective" ],
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowOtherObjectivesCount:Display",
+					"text": "Show Additional Objectives Count",
+					"help": "Adds the number of objectives to the text under the compass quest marker.\nDefault: Enabled",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "Quest List",
+			"cursorFillMode": "topToBottom",
+			"content": [
+				{
+					"text": "Display ",
+					"type": "header"
+				},
+				{
+					"id": "fPositionX:QuestList",
+					"text": "X Offset",
+					"help": "Horizontal offset of the quest list. Wide-screen users might want to set this negative or greater than 1 (in screen width proportion).\nDefault: 0.01",
+					"type": "slider",
+					"valueOptions": {
+						"min": -1,
+						"max": 2,
+						"step": 0.01,
+						"formatString": "{2}",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fPositionY:QuestList",
+					"text": "Y Offset",
+					"help": "Vertical offset of the quest list.\nDefault: 0.15",
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 1,
+						"step": 0.01,
+						"formatString": "{2}",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fMaxHeight:QuestList",
+					"text": "Max Height",
+					"help": "Maximum height of the quest list.\nDefault: 0.67",
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 1,
+						"step": 0.01,
+						"formatString": "{2}",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "bShowInExteriors:QuestList",
+					"text": "Show in Exteriors",
+					"help": "Show the quest list in exteriors.\nDefault: Enabled",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowInInteriors:QuestList",
+					"text": "Show in Interiors",
+					"help": "Show the quest list in interiors.\nDefault: Enabled",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bHideInCombat:QuestList",
+					"text": "Hide In Combat",
+					"help": "Hide when the weapon is drawn.\nDefault: Disabled",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "Debug",
+			"cursorFillMode": "topToBottom",
+			"content": [
+				{
+					"id": "uLogLevel:Debug",
+					"text": "Log Level",
+					"help": "Sets the level of detail in the log.\nDefault: Info",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "Trace", "Debug", "Info", "Warning", "Error", "Critical Error" ],
+						"sourceType": "ModSettingInt"
+					}
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,234 @@
+{
+	"modName": "Compass Navigation Overhaul VR",
+	"displayName": "Compass Navigation Overhaul VR",
+	"customContent": {
+		"source": "MCM/Compass Navigation Overhaul VR/splashart.swf"
+	},
+	"pages": [
+		{
+			"pageDisplayName": "罗盘",
+			"cursorFillMode": "topToBottom",
+			"content": [
+				{
+					"text": "标记 ",
+					"type": "header"
+				},
+				{
+					"id": "uUndiscoveredLocationMarkers:Display",
+					"text": "未发现的地点",
+					"help": "选择未发现的地图标记如何显示。\n默认：隐藏",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "隐藏", "「?」图标", "原本图标" ],
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "bShowEnemyMarkers:Display",
+					"text": "显示敌人",
+					"help": "默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowInteriorMarkers:Display",
+					"text": "透过传送门显示",
+					"help": "在外面时，透过传送门（例如城市入口）显示里面的地点与敌人。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"text": "控制 ",
+					"type": "header"
+				},
+				{
+					"id": "fAngleToShowMarkerDetails:Display",
+					"text": "视锥起始角度",
+					"help": "标记与罗盘中心的夹角小于该值时，开始显示标记详情。\n默认：10º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fAngleToKeepMarkerDetailsShown:Display",
+					"text": "视锥保持角度",
+					"help": "标记详情已经显示后，夹角超过该值才停止显示。\n默认：35º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fFocusingDelayToShow:Display",
+					"text": "视锥延迟",
+					"help": "标记进入罗盘中心后，延迟多久显示详情。\n默认：0.1 秒",
+					"type": "slider",
+					"valueOptions": {
+						"min": 0.05,
+						"max": 3.0,
+						"step": 0.05,
+						"formatString": "{2} 秒",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"text": "标记附加信息",
+					"type": "header",
+					"position": 1
+				},
+				{
+					"id": "bShowUndiscoveredLocationInfo:Display",
+					"text": "显示未发现地点的信息",
+					"help": "是否为未发现的地点标记显示名称与距离。\n默认：关闭",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowEnemyNameUnderMarker:Display",
+					"text": "显示敌人名称",
+					"help": "不在直接战斗中时，在罗盘的敌人标记下方显示敌人名称。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUseMetricUnits:Display",
+					"text": "距离单位",
+					"help": "距离使用公制还是英制单位。\n默认：公制",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "英制", "公制" ],
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowObjectiveAsTarget:Display",
+					"text": "任务信息显示内容",
+					"help": "罗盘任务标记下方的文字显示地点还是任务目标。\n默认：任务目标",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "地点", "任务目标" ],
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowOtherObjectivesCount:Display",
+					"text": "显示其余目标数量",
+					"help": "在罗盘任务标记下方的文字后面追加目标数量，形如 (+2)。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "任务列表",
+			"cursorFillMode": "topToBottom",
+			"content": [
+				{
+					"text": "显示 ",
+					"type": "header"
+				},
+				{
+					"id": "fPositionX:QuestList",
+					"text": "横向偏移",
+					"help": "任务列表的横向偏移，单位是屏幕宽度的比例。宽屏用户可能需要设成负数或大于 1。\n默认：0.01",
+					"type": "slider",
+					"valueOptions": {
+						"min": -1,
+						"max": 2,
+						"step": 0.01,
+						"formatString": "{2}",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fPositionY:QuestList",
+					"text": "纵向偏移",
+					"help": "任务列表的纵向偏移，单位是屏幕高度的比例。\n默认：0.15",
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 1,
+						"step": 0.01,
+						"formatString": "{2}",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fMaxHeight:QuestList",
+					"text": "最大高度",
+					"help": "任务列表的最大高度，单位是屏幕高度的比例。\n默认：0.67",
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 1,
+						"step": 0.01,
+						"formatString": "{2}",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "bShowInExteriors:QuestList",
+					"text": "室外显示",
+					"help": "在室外显示任务列表。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowInInteriors:QuestList",
+					"text": "室内显示",
+					"help": "在室内显示任务列表。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bHideInCombat:QuestList",
+					"text": "战斗中隐藏",
+					"help": "拔出武器时隐藏任务列表。\n默认：关闭",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "调试",
+			"cursorFillMode": "topToBottom",
+			"content": [
+				{
+					"id": "uLogLevel:Debug",
+					"text": "日志级别",
+					"help": "设置日志的详细程度，级别越低记录越多。\n默认：Info",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "Trace 追踪", "Debug 调试", "Info 信息", "Warning 警告", "Error 错误", "Critical 严重错误" ],
+						"sourceType": "ModSettingInt"
+					}
+				}
+			]
+		}
+	]
+}
