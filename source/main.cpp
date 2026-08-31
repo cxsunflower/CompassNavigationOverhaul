@@ -12,8 +12,6 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 	
 	skse = a_skse;
 
-	std::this_thread::sleep_for(6s);
-
 	const SKSE::PluginDeclaration* plugin = SKSE::PluginDeclaration::GetSingleton();
 
 	if (!logger::init(plugin->GetName()))
@@ -25,21 +23,36 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 
 	SKSE::Init(a_skse);
 
-	settings::Init(std::string(plugin->GetName()) + ".ini");
+	// SKSEVR 可能把同一份 1.4.15 可执行文件报告为 build 0 或 build 1；二者共享已验证的机器码布局。
+	const auto runtimeVersion = a_skse->RuntimeVersion();
+	const bool supportedRuntime = REL::Module::IsVR() &&
+		 runtimeVersion.major() == 1 && runtimeVersion.minor() == 4 && runtimeVersion.patch() == 15 &&
+		 runtimeVersion.build() <= 1;
 
-	logger::set_level(settings::debug::logLevel, settings::debug::logLevel);
+	if (!supportedRuntime)
+	{
+		logger::critical("Unsupported runtime version: {}", runtimeVersion.string());
+		return false;
+	}
+
+	// 设置在 kPostLoad 阶段按三层 INI 加载；此处先使用内置默认值初始化日志。
+	const logger::level effectiveLogLevel = settings::debug::EffectiveLogLevel();
+	logger::set_level(effectiveLogLevel, effectiveLogLevel);
 
 	if (!SKSE::GetMessagingInterface()->RegisterListener("SKSE", SKSEMessageListener))
 	{
 		return false;
 	}
 
-	hooks::Install();
+	if (!hooks::Install())
+	{
+		return false;
+	}
 
 	logger::set_level(logger::level::info, logger::level::info);
-	logger::info("Succesfully loaded!");
+	logger::info("Successfully loaded!");
 
-	logger::set_level(settings::debug::logLevel, settings::debug::logLevel);
+	logger::set_level(effectiveLogLevel, effectiveLogLevel);
 
 	return true;
 }
