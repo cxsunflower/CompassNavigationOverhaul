@@ -3,6 +3,8 @@
 #include "IUI/GFxArray.h"
 #include "IUI/GFxDisplayObject.h"
 
+#include "RE/G/GFxMovieDef.h"
+
 #include "Settings.h"
 
 struct QuestItem
@@ -26,7 +28,9 @@ struct QuestItem
 class QuestItemList : public IUI::GFxDisplayObject
 {
 public:
-	static constexpr inline std::string_view path = "_level0.HUDMovieBaseInstance.QuestItemList";
+	// VR 中直挂 HUDMovieBaseInstance 会在 Infinity UI 遍历成员表时崩溃，因此与 Compass
+	// 一样挂到 CompassShoutMeterHolder；补丁资源路径必须与该层级一致。
+	static constexpr inline std::string_view path = "_level0.HUDMovieBaseInstance.CompassShoutMeterHolder.QuestItemList";
 
 	static void InitSingleton(const GFxDisplayObject& a_questItemList)
 	{
@@ -60,6 +64,27 @@ public:
 
 	bool IsHiddenByForce() const { return hiddenByForce; }
 
+	// positionX/Y 是影片比例坐标；减去舞台原点可转换为父影片剪辑的局部坐标。
+	void UpdateLayout()
+	{
+		RE::GFxValue::DisplayInfo displayInfo;
+
+		GetDisplayInfo(&displayInfo);
+
+		RE::GFxMovieDef* movieDef = GetMovieView()->GetMovieDef();
+
+		displayInfo.SetX(movieDef->GetWidth() * settings::questlist::positionX - originX);
+		displayInfo.SetY(movieDef->GetHeight() * settings::questlist::positionY - originY);
+
+		SetDisplayInfo(displayInfo);
+	}
+
+	// 将最大高度同步到 ActionScript。
+	void SetMaxHeight(float a_maxHeight)
+	{
+		Invoke("SetMaxHeight", a_maxHeight);
+	}
+
 	void AddToHudElements()
 	{
 		Invoke("AddToHudElements");
@@ -76,6 +101,7 @@ public:
 
 		Invoke("AddQuest", a_questItem.type, a_questItem.name.c_str(), a_questItem.isInSameLocation,
 			   gfxQuestObjectives, a_questItem.ageIndex);
+
 	}
 
 	void SetQuestSide(const std::string& a_sideName)
@@ -86,16 +112,6 @@ public:
 	void Update()
 	{
 		Invoke("Update");
-	}
-
-	void ShowQuest()
-	{
-		Invoke("ShowQuest");
-	}
-
-	void RemoveQuest()
-	{
-		Invoke("RemoveQuest");
 	}
 
 	void ShowAllQuests()
@@ -110,13 +126,27 @@ public:
 
 private:
 
+	// 零参数初始化 AS 实例，并保存舞台原点供 UpdateLayout 使用。
 	QuestItemList(const GFxDisplayObject& a_questItemList) :
 		GFxDisplayObject{ a_questItemList }
 	{
-		Invoke("QuestItemList", settings::questlist::positionX, settings::questlist::positionY, settings::questlist::maxHeight);
+		if (HasMember("QuestItemList"))
+		{
+			Invoke("QuestItemList");
+
+			RE::GPointF origin = LocalToGlobal();
+
+			originX = origin.x;
+			originY = origin.y;
+		}
 	}
 
 	static inline QuestItemList* singleton = nullptr;
+
+	// 成员顺序必须与 DLL 中的布局一致（GFxValue 占 0x00-0x17）：
+	//   originX @0x18、originY @0x1c、hiddenByForce @0x20。
+	float originX = 0.0F;
+	float originY = 0.0F;
 
 	bool hiddenByForce = false;
 };
