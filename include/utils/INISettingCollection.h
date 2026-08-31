@@ -6,8 +6,7 @@
 
 namespace utils
 {
-	// Deriving from RE::INISettingCollection does not compile as the virtual functions are not defined (Unresolved external symbols).
-	// The best way I could find is to replicate that class layout into mine.
+	// RE::INISettingCollection 的虚函数未定义，无法直接继承，因此复制其类布局。
 	class INISettingCollection
 	{
 		static constexpr REL::RelocationID vTableId = RELOCATION_ID(230108, 187074);
@@ -52,7 +51,8 @@ namespace utils
 		template <>
 		std::int32_t GetSetting<std::int32_t>(const char* a_name) const
 		{
-			return GetSetting(a_name)->GetSInt();
+			// ng 6.7.1 把 RE::Setting 的取值接口重命名：GetSInt→GetInteger。
+			return GetSetting(a_name)->GetInteger();
 		}
 		template <>
 		RE::Color GetSetting<RE::Color>(const char* a_name) const
@@ -67,15 +67,17 @@ namespace utils
 		template <>
 		std::uint32_t GetSetting<std::uint32_t>(const char* a_name) const
 		{
-			return GetSetting(a_name)->GetUInt();
+			// ng 6.7.1：GetUInt→GetUnsignedInteger。
+			return GetSetting(a_name)->GetUnsignedInteger();
 		}
 
-		bool ReadFromFile(std::string_view a_fileName);
+		// a_dataRelativePath：相对于游戏 Data 目录的路径。
+		bool ReadFromFile(std::string_view a_dataRelativePath);
 
 	private:
 		INISettingCollection() noexcept;
 
-		// Virtual table auto-generation. Needed to replace the original class.
+		// 生成虚表以替换原类。
 		virtual ~INISettingCollection() = default;	// 00
 
 		virtual void InsertSetting(RE::Setting*) { throw(""); }	 // 01
@@ -91,7 +93,7 @@ namespace utils
 		RE::INISettingCollection* _this() { return reinterpret_cast<RE::INISettingCollection*>(this); }
 		const RE::INISettingCollection* _this() const { return reinterpret_cast<const RE::INISettingCollection*>(this); }
 
-		// members
+		// 成员
 		char subKey[MAX_PATH];					  // 008
 		std::uint32_t pad10C;					  // 10C
 		void* handle;							  // 110

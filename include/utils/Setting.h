@@ -6,8 +6,7 @@
 
 namespace utils
 {
-	// Deriving from RE::Setting does not compile as the virtual functions are not defined (Unresolved external symbols).
-	// The best way I could find is to replicate that class layout into mine.
+	// RE::Setting 的虚函数未定义，无法直接继承，因此复制其类布局。
 	class Setting
 	{
 		template <typename T>
@@ -46,7 +45,7 @@ namespace utils
 						return;
 					}
 				} else if constexpr (std::is_same_v<T, int>) {
-					if (GetType() == Type::kSignedInteger) {
+					if (GetType() == Type::kInteger) {  // ng 6.7.1：kSignedInteger→kInteger
 						data.i = a_data;
 
 						return;
@@ -81,7 +80,7 @@ namespace utils
 			}
 		}
 
-		// For the virtual table auto-generation.
+		// 用于自动生成虚表。
 		virtual bool Unk_01(void) { return false; }	 // 01
 
 		Type GetType() const
@@ -89,7 +88,7 @@ namespace utils
 			return reinterpret_cast<const RE::Setting*>(this)->GetType();
 		}
 
-		// members
+		// 成员
 		RE::Setting::Data data{};  // 08
 		char* name;				   // 10
 	};
