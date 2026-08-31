@@ -1,6 +1,7 @@
 #pragma once
 
-#include "IUI/GFxArray.h"
+#include "Settings.h"
+
 #include "IUI/GFxDisplayObject.h"
 
 #include "utils/Geometry.h"
@@ -50,14 +51,10 @@ namespace CNO
 			}
 		}
 
-		void SetUnits(bool a_useMetric)
+		// 从全局设置读取单位，可安全重复调用。
+		void SetUnits()
 		{
-			Invoke("SetUnits", a_useMetric);
-		}
-
-		void SetMarkers()
-		{
-			Invoke("SetMarkers");
+			Invoke("SetUnits", settings::display::useMetricUnits);
 		}
 
 		void SetFocusedMarkerInfo(const std::string_view& a_targetText, float a_distance,
@@ -82,17 +79,7 @@ namespace CNO
 			Invoke("UpdateFocusedMarker");
 		}
 
-		void PostProcessMarkers(const std::unordered_map<std::uint32_t, bool>& a_unknownLocations, std::uint32_t a_markersCount)
-		{
-			GFxArray gfxIsUnknownLocations{ GetMovieView() };
-
-			for (std::uint32_t i = 0; i < a_markersCount; i++)
-			{
-				gfxIsUnknownLocations.PushBack(a_unknownLocations.contains(i));
-			}
-
-			Invoke("PostProcessMarkers", gfxIsUnknownLocations);
-		}
+		// 未知地点图标由 HUDMarkerManager::ProcessLocationMarker 直接更新。
 
 	private:
 		Compass(const GFxDisplayObject& a_originalCompass) : GFxDisplayObject{ a_originalCompass }

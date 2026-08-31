@@ -31,8 +31,7 @@ namespace util
 		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
 		RE::NiPoint3 playerPos = player->GetPosition();
 
-		// Skyrim used this instead, but less precise (don't know why)
-		//RE::NiPoint3 markerPos = a_markerRef->GetLookingAtLocation();
+		// Skyrim 原本使用 GetLookingAtLocation()，但精度较低。
 
 		RE::NiPoint3 markerPos = a_markerRef->GetPosition();
 

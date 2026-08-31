@@ -50,18 +50,23 @@ namespace CNO
 
 		std::string GetSideInQuest(RE::QUEST_DATA::Type a_questType) const;
 
-		Compass* compass = Compass::GetSingleton();
-		QuestItemList* questItemList = QuestItemList::GetSingleton();
+		static const RE::TESFaction* LookupFaction(RE::FormID a_localFormID, std::string_view a_modName)
+		{
+			const auto dataHandler = RE::TESDataHandler::GetSingleton();
+			return dataHandler ? dataHandler->LookupForm<RE::TESFaction>(a_localFormID, a_modName) : nullptr;
+		}
 
 		float facingAngle = settings::display::angleToShowMarkerDetails;
 		float keepFocusedAngle = settings::display::angleToKeepMarkerDetailsShown;
 
 		float timePreFocusingMarker = 0.0F;
-		float timeFocusingMarker = 0.0F;
 
 		std::vector<Compass::Marker> facedMarkers;
 		std::unique_ptr<Compass::Marker> preFocusedMarker;
 		std::unique_ptr<Compass::Marker> focusedMarker;
+		RE::TESObjectREFR* displayedQuestMarker = nullptr;
+		RE::TESObjectREFR* pendingQuestListMarker = nullptr;
+		float questListFocusTime = 0.0F;
 
 		std::unordered_map<RE::TESObjectREFR*, std::unordered_map<RE::TESQuest*, QuestItem>> questItems;
 		std::unordered_map<RE::TESObjectREFR*, QuestItem> miscQuestItem;
@@ -71,12 +76,11 @@ namespace CNO
 		RE::PlayerCamera* playerCamera = RE::PlayerCamera::GetSingleton();
 		RE::BSTimer* timeManager = RE::BSTimer::GetTimeManager();
 
-		// Factions to lookup
-		// Reference: Creation Kit -> Skyrim.esm, Dawnguard.esm
-		const RE::TESFaction* const imperialLegionFaction = RE::TESForm::LookupByID(0x0002BF9A)->As<RE::TESFaction>();
-		const RE::TESFaction* const stormCloaksFaction = RE::TESForm::LookupByID(0x00028849)->As<RE::TESFaction>();
-		const RE::TESFaction* const sonsOfSkyrimFaction = RE::TESForm::LookupByID(0x0002BF9B)->As<RE::TESFaction>();
-		const RE::TESFaction* const dawnGuardFaction = RE::TESForm::LookupByID(0x02014217)->As<RE::TESFaction>();
-		const RE::TESFaction* const vampireFaction = RE::TESForm::LookupByID(0x02003376)->As<RE::TESFaction>();
+		// 按插件名和本地 FormID 查找，避免 VR/Creation Club 改变加载序号后得到空指针。
+		const RE::TESFaction* const imperialLegionFaction = LookupFaction(0x02BF9A, "Skyrim.esm");
+		const RE::TESFaction* const stormCloaksFaction = LookupFaction(0x028849, "Skyrim.esm");
+		const RE::TESFaction* const sonsOfSkyrimFaction = LookupFaction(0x02BF9B, "Skyrim.esm");
+		const RE::TESFaction* const dawnGuardFaction = LookupFaction(0x014217, "Dawnguard.esm");
+		const RE::TESFaction* const vampireFaction = LookupFaction(0x003376, "Dawnguard.esm");
 	};
 }

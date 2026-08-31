@@ -17,28 +17,30 @@ namespace CNO
 			angleToPlayerCamera < facingAngle)
 		{
 			std::string description;
+			RE::QUEST_DATA::Type questType = a_quest->GetType();
 
+			// 根据设置显示目标文本或目标所在位置。
 			if (settings::display::showObjectiveAsTarget)
 			{
 				description = a_questObjective->GetDisplayTextWithReplacedTags().c_str();
 			}
 			else
 			{
-				// A quest marker can reference to a character or a location
+				// 任务标记可能指向一个角色，也可能指向一处地点
 				switch (a_marker->GetFormType())
 				{
 				case RE::FormType::Reference:
 					if (auto teleportDoor = a_marker->As<RE::TESObjectREFR>())
 					{
-						// If it is a teleport door, we can get the door at the other side
+						// 如果是传送门，取门另一侧的名字
 						if (auto teleportLinkedDoor = teleportDoor->extraList.GetTeleportLinkedDoor().get())
 						{
-							// First, try interior cell
+							// 先试内景 cell
 							if (RE::TESObjectCELL* cell = teleportLinkedDoor->GetParentCell())
 							{
 								description = cell->GetName();
 							}
-							// Exterior cell
+							// 再试外景 worldspace
 							else if (RE::TESWorldSpace* worldSpace = teleportLinkedDoor->GetWorldspace())
 							{
 								description = worldSpace->GetName();
@@ -55,11 +57,21 @@ namespace CNO
 				}
 			}
 
+			// 每个 FormID 仅记录一次最终标题，便于区分 C++ 与 AS/GFx 问题。
+			if (settings::debug::logLevel <= logger::level::debug)
+			{
+				static std::unordered_set<RE::FormID> loggedQuestMarkers;
+				if (loggedQuestMarkers.insert(a_marker->GetFormID()).second)
+				{
+					logger::debug("[QuestMatch] marker 0x{:08X} matched, showObjectiveAsTarget={} dispatched title='{}' (length={})",
+								  a_marker->GetFormID(), settings::display::showObjectiveAsTarget,
+								  description, description.size());
+				}
+			}
+
 			facedMarkers.emplace_back(a_marker, angleToPlayerCamera,
 									  hudMarkerManager->currentMarkerIndex - 1,
 									  a_markerIcon, description);
-
-			RE::QUEST_DATA::Type questType = a_quest->GetType();
 
 			bool isInSameLocation = a_markerIcon == RE::HUDMarker::FrameOffsets::GetSingleton()->quest;
 
@@ -98,7 +110,8 @@ namespace CNO
 
 		bool isDiscoveredLocation = a_mapMarker->mapData->flags.all(RE::MapMarkerData::Flag::kVisible);
 
-		if (isDiscoveredLocation || !settings::display::undiscoveredMeansUnknownInfo)
+		// 已发现地点始终显示详情；未发现地点由正向开关控制。
+		if (isDiscoveredLocation || settings::display::showUndiscoveredLocationInfo)
 		{
 			if ((IsTheFocusedMarker(a_marker) && angleToPlayerCamera < keepFocusedAngle) ||
 				angleToPlayerCamera < facingAngle)
@@ -109,9 +122,15 @@ namespace CNO
 										  hudMarkerManager->currentMarkerIndex - 1,
 										  a_markerIcon, locationFullName);
 			}
+
+			if (isDiscoveredLocation)
+			{
+				return;
+			}
 		}
 
-		if (!isDiscoveredLocation && settings::display::undiscoveredMeansUnknownMarkers)
+		// kHidden 已在 Hook 入口过滤；kUnknown 使用 AS 的 0 号“?”图标帧。
+		if (settings::display::undiscoveredLocationMarkers == settings::UndiscoveredLocationMarkers::kUnknown)
 		{
 			hudMarkerManager->scaleformMarkerData[hudMarkerManager->currentMarkerIndex - 1].icon.SetNumber(0);
 		}
@@ -124,7 +143,10 @@ namespace CNO
 		if ((IsTheFocusedMarker(a_enemy) && angleToPlayerCamera < keepFocusedAngle) ||
 			angleToPlayerCamera < facingAngle)
 		{
-			std::string enemyName = NND::NPCNameProvider::GetSingleton()->GetName(a_enemy);
+			// 关闭名称时跳过 NND 查询。
+			const char* enemyName = settings::display::showEnemyNameUnderMarker ?
+										NND::NPCNameProvider::GetSingleton()->GetName(a_enemy) :
+										"";
 
 			facedMarkers.emplace_back(a_enemy, angleToPlayerCamera,
 									hudMarkerManager->currentMarkerIndex - 1,
@@ -147,16 +169,34 @@ namespace CNO
 
 	void HUDMarkerManager::SetMarkersExtraInfo()
 	{
+		// VR 会在 Infinity UI 完成 HUDMenu 补丁前更新 Compass，不能永久缓存尚未创建的 GFx 单例。
+		auto compass = Compass::GetSingleton();
+		if (!compass)
+		{
+			if (displayedQuestMarker)
+			{
+				if (auto questItemList = QuestItemList::GetSingleton())
+				{
+					questItemList->RemoveAllQuests();
+				}
+				displayedQuestMarker = nullptr;
+			}
+			pendingQuestListMarker = nullptr;
+			questListFocusTime = 0.0F;
+			preFocusedMarker.reset();
+			focusedMarker.reset();
+			timePreFocusingMarker = 0.0F;
+			facedMarkers.clear();
+			questItems.clear();
+			miscQuestItem.clear();
+			return;
+		}
+
 		bool focusChanged = UpdateFocusedMarker();
 
 		if (focusChanged)
 		{
 			compass->UnfocusMarker();
-			timeFocusingMarker = 0.0F;
-		}
-		else if (focusedMarker)
-		{
-			timeFocusingMarker += timeManager->realTimeDelta;
 		}
 
 		bool isFocusedQuestMarker = false;
@@ -164,15 +204,17 @@ namespace CNO
 		if (focusedMarker)
 		{
 			std::string focusedMarkerDescription = focusedMarker->description;
+			const bool hasRegularQuests = questItems.contains(focusedMarker->ref);
+			const bool hasMiscellaneousQuest = miscQuestItem.contains(focusedMarker->ref);
+			isFocusedQuestMarker = hasRegularQuests || hasMiscellaneousQuest;
 
+			// 仅在显示任务目标文本时附加其他目标数量。
 			if (settings::display::showObjectiveAsTarget && settings::display::showOtherObjectivesCount)
 			{
 				int objectivesCount = 0;
 
-				if (questItems.contains(focusedMarker->ref))
+				if (hasRegularQuests)
 				{
-					isFocusedQuestMarker = true;
-
 					std::unordered_map<RE::TESQuest*, QuestItem>& questItemMap = questItems[focusedMarker->ref];
 
 					for (auto& [quest, questItem] : questItemMap)
@@ -181,10 +223,8 @@ namespace CNO
 					}
 				}
 
-				if (miscQuestItem.contains(focusedMarker->ref))
+				if (hasMiscellaneousQuest)
 				{
-					isFocusedQuestMarker = true;
-
 					QuestItem& questItem = miscQuestItem[focusedMarker->ref];
 
 					objectivesCount += questItem.objectives.size();
@@ -207,60 +247,75 @@ namespace CNO
 			compass->UpdateFocusedMarker();
 		}
 
-		RE::ActorState* playerState = player->AsActorState();
-
-		bool canQuestItemListBeDisplayed = questItemList->CanBeDisplayed(player->GetParentCell(), playerState->IsWeaponDrawn());
-
-		if (!canQuestItemListBeDisplayed || focusChanged)
+		// QuestItemList 可能比 Compass 更晚创建；缺失时只跳过任务列表，不影响名称与距离。
+		if (auto questItemList = QuestItemList::GetSingleton())
 		{
-			questItemList->RemoveAllQuests();
-		}
+			RE::ActorState* playerState = player->AsActorState();
+			bool canQuestItemListBeDisplayed = questItemList->CanBeDisplayed(player->GetParentCell(), playerState->IsWeaponDrawn());
 
-		if (canQuestItemListBeDisplayed && isFocusedQuestMarker)
-		{
-			if (focusChanged)
+			// 聚焦任务标记稳定 0.3 秒后显示；失焦或切换标记时立即清空旧列表。
+			RE::TESObjectREFR* targetQuestMarker =
+				canQuestItemListBeDisplayed && isFocusedQuestMarker ? focusedMarker->ref : nullptr;
+
+			if (!targetQuestMarker)
 			{
-				if (questItems.contains(focusedMarker->ref))
+				if (displayedQuestMarker)
 				{
-					std::unordered_map<RE::TESQuest*, QuestItem>& questItemMap = questItems[focusedMarker->ref];
-
-					for (auto& [quest, questItem] : questItemMap)
-					{
-						questItemList->AddQuest(questItem);
-						questItemList->SetQuestSide(GetSideInQuest(questItem.type));
-
-						// If we call a function more than once per frame (like in this for-loop)
-						// we need to update the stage with `GFxMovieView::Advance`, otherwise graphical
-						// glitches occur to the element when showing up
-						questItemList->GetMovieView()->Advance(0.0F);
-					}
+					questItemList->RemoveAllQuests();
+					displayedQuestMarker = nullptr;
 				}
-				
-				if (miscQuestItem.contains(focusedMarker->ref))
-				{
-					QuestItem& questItem = miscQuestItem[focusedMarker->ref];
-
-					questItemList->AddQuest(questItem);
-
-					// If we call a function more than once per frame (like in this for-loop)
-					// we need to update the stage with `GFxMovieView::Advance`, otherwise graphical
-					// glitches occur to the element when showing up
-					questItemList->GetMovieView()->Advance(0.0F);
-				}
+				pendingQuestListMarker = nullptr;
+				questListFocusTime = 0.0F;
 			}
-
-			questItemList->SetHiddenByForce(false);
-
-			float playerSpeed = playerState->DoGetMovementSpeed();
-
-			float delayToShow = (playerSpeed < player->GetWalkSpeed()) ? settings::questlist::walkingDelayToShow :
-								(playerSpeed < player->GetJogSpeed())  ? settings::questlist::joggingDelayToShow :
-																		 settings::questlist::sprintingDelayToShow;
-
-			if (timeFocusingMarker > delayToShow)
+			else if (displayedQuestMarker == targetQuestMarker)
 			{
+				pendingQuestListMarker = nullptr;
+				questListFocusTime = 0.0F;
 				questItemList->ShowAllQuests();
 				questItemList->Update();
+			}
+			else
+			{
+				if (displayedQuestMarker)
+				{
+					questItemList->RemoveAllQuests();
+					displayedQuestMarker = nullptr;
+				}
+
+				if (pendingQuestListMarker != targetQuestMarker)
+				{
+					pendingQuestListMarker = targetQuestMarker;
+					questListFocusTime = 0.0F;
+				}
+				else
+				{
+					questListFocusTime += timeManager->realTimeDelta;
+					if (questListFocusTime >= 0.3F)
+					{
+						if (questItems.contains(targetQuestMarker))
+						{
+							for (auto& [quest, questItem] : questItems[targetQuestMarker])
+							{
+								questItemList->AddQuest(questItem);
+								questItemList->SetQuestSide(GetSideInQuest(questItem.type));
+								questItemList->GetMovieView()->Advance(0.0F);
+							}
+						}
+
+						if (miscQuestItem.contains(targetQuestMarker))
+						{
+							questItemList->AddQuest(miscQuestItem[targetQuestMarker]);
+							questItemList->GetMovieView()->Advance(0.0F);
+						}
+
+						questItemList->SetHiddenByForce(false);
+						questItemList->ShowAllQuests();
+						questItemList->Update();
+						displayedQuestMarker = targetQuestMarker;
+						pendingQuestListMarker = nullptr;
+						questListFocusTime = 0.0F;
+					}
+				}
 			}
 		}
 
@@ -366,6 +421,11 @@ namespace CNO
 
 	bool HUDMarkerManager::IsPlayerAllyOfFaction(const RE::TESFaction* a_faction) const
 	{
+		if (!a_faction)
+		{
+			return false;
+		}
+
 		if (player->IsInFaction(a_faction)) 
 		{
 			return true;
@@ -373,6 +433,11 @@ namespace CNO
 
 		return player->VisitFactions([a_faction](RE::TESFaction* a_visitedFaction, std::int8_t a_rank) -> bool
 		{
+			if (!a_visitedFaction)
+			{
+				return false;
+			}
+
 			if (a_visitedFaction == a_faction && a_rank > 0)
 			{
 				return true;
@@ -380,6 +445,11 @@ namespace CNO
 
 			for (RE::GROUP_REACTION* reactionToFaction : a_visitedFaction->reactions)
 			{
+				if (!reactionToFaction || !reactionToFaction->form)
+				{
+					continue;
+				}
+
 				auto relatedFaction = reactionToFaction->form->As<RE::TESFaction>();
 				if (relatedFaction == a_faction && reactionToFaction->fightReaction >= RE::FIGHT_REACTION::kAlly)
 				{
@@ -393,8 +463,18 @@ namespace CNO
 
 	bool HUDMarkerManager::IsPlayerOpponentOfFaction(const RE::TESFaction* a_faction) const
 	{
+		if (!a_faction)
+		{
+			return false;
+		}
+
 		return player->VisitFactions([a_faction](RE::TESFaction* a_visitedFaction, std::int8_t a_rank) -> bool
 		{
+			if (!a_visitedFaction)
+			{
+				return false;
+			}
+
 			if (a_visitedFaction == a_faction && a_rank < 0)
 			{
 				return true;
@@ -402,6 +482,11 @@ namespace CNO
 
 			for (RE::GROUP_REACTION* reactionToFaction : a_visitedFaction->reactions)
 			{
+				if (!reactionToFaction || !reactionToFaction->form)
+				{
+					continue;
+				}
+
 				auto relatedFaction = reactionToFaction->form->As<RE::TESFaction>();
 				if (relatedFaction == a_faction && reactionToFaction->fightReaction == RE::FIGHT_REACTION::kEnemy)
 				{
