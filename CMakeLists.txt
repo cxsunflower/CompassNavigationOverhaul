@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.21)
 
-########################################################################################################################
-## Define project
-########################################################################################################################
+# 项目
+
+# CMake 与 build.bat 共用 VERSION。
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" CNO_VERSION LIMIT_COUNT 1)
+string(STRIP "${CNO_VERSION}" CNO_VERSION)
 
 project(
-	CompassNavigationOverhaul
-	VERSION 2.2.0
+	CompassNavigationOverhaulVR
+	VERSION ${CNO_VERSION}
 	LANGUAGES CXX
 )
 
@@ -32,9 +34,7 @@ source_group(
 		${sources}
 )
 
-########################################################################################################################
-## Configure target DLL
-########################################################################################################################
+# DLL 目标
 
 find_package(CommonLibSSE CONFIG REQUIRED)
 find_package(spdlog REQUIRED CONFIG)
@@ -69,15 +69,14 @@ endif()
 target_precompile_headers(
 	${PROJECT_NAME}
 	PRIVATE
-		include/PCH.h
+		include/pch.h
 )
 
-########################################################################################################################
-## Automatic plugin deployment
-########################################################################################################################
+# 自动部署
 
-set(SKYRIM_SE_DIR "C:/Program Files (x86)/Steam/steamapps/common/Skyrim Special Edition")
-set(SKYRIM_VR_DIR "C:/Program Files (x86)/Steam/steamapps/common/Skyrim VR")
+# 可通过 -DSKYRIM_*_DIR=... 指定安装目录；目录不存在时仅生成 DLL，不自动部署。
+set(SKYRIM_SE_DIR "C:/Program Files (x86)/Steam/steamapps/common/Skyrim Special Edition" CACHE PATH "Skyrim SE 安装目录")
+set(SKYRIM_VR_DIR "C:/Program Files (x86)/Steam/steamapps/common/Skyrim VR" CACHE PATH "Skyrim VR 安装目录")
 
 if ("$ENV{RUNTIME_DISABLE_FLAGS}" STREQUAL "")
 	set(COPY_SE YES)
@@ -90,13 +89,13 @@ elseif ("$ENV{RUNTIME_DISABLE_FLAGS}" STREQUAL "-UENABLE_SKYRIM_SE -UENABLE_SKYR
 	set(COPY_VR YES)
 endif()
 
-if (COPY_SE)
+if (COPY_SE AND EXISTS "${SKYRIM_SE_DIR}/Data/SKSE/Plugins")
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}>
 		"${SKYRIM_SE_DIR}/Data/SKSE/Plugins/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
 	)
 endif()
-if (COPY_VR)
+if (COPY_VR AND EXISTS "${SKYRIM_VR_DIR}/Data/SKSE/Plugins")
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}>
 		"${SKYRIM_VR_DIR}/Data/SKSE/Plugins/$<TARGET_FILE_NAME:${PROJECT_NAME}>"

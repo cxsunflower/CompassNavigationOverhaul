@@ -1,2 +1,27 @@
+# ---- 编译 / IDE 产物 ----
 .vs/
+.vscode/
+.idea/
 build/
+out/
+*.user
+
+# ---- 打包产物 ----
+# build.bat 输出的 zip
+dist/
+# 静态打包输入位于 assets/；build/package/ 已由上面的 build/ 规则覆盖。
+
+# ---- vcpkg（清单模式在源码树内安装时）----
+vcpkg_installed/
+
+# ---- CMake 个人配置（因机器而异，不共享）----
+CMakeUserPresets.json
+CMakeSettings.json
+
+# ---- tools\ 下 Python 脚本的缓存 ----
+__pycache__/
+*.pyc
+
+# ---- 系统垃圾 ----
+Thumbs.db
+Desktop.ini

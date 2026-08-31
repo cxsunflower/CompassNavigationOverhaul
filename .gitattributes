@@ -1,2 +1,33 @@
-# Auto detect text files and perform LF normalization
+# 默认：文本按平台自动归一化行尾（仓库内存 LF）
 * text=auto
+
+# ---- Windows 脚本强制 CRLF（batch 用 LF 可能出问题）----
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
+
+# ---- 二进制资源：一律 binary（= -text -diff），禁止行尾归一化/文本 diff，避免损坏 ----
+# 本工程实际存在的：SWF 界面资源、空壳 esp、编译产物 DLL/PDB
+*.swf binary
+*.esp binary
+*.dll binary
+*.pdb binary
+# 其它常见 Skyrim 资源，防御性声明（将来放进来也不会被当文本处理）
+*.esm binary
+*.esl binary
+*.bsa binary
+*.nif binary
+*.dds binary
+*.hkx binary
+*.tri binary
+*.fuz binary
+*.xwm binary
+*.wav binary
+*.pex binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.lib binary
+*.exe binary
+
+# Ghidra 反编译证据保留原始空白，不参与提交空白检查。
+decompiled/** whitespace=-trailing-space,-blank-at-eof
