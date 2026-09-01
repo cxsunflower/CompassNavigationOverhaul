@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      run-id:
+        description: "Build 工作流的 run ID（留空则使用最近一次成功的构建）"
+        type: string
+        default: ""
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 解析 run ID
+        id: runid
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_RUN_ID: ${{ inputs.run-id }}
+        run: |
+          if [ -n "$INPUT_RUN_ID" ]; then
+            echo "id=$INPUT_RUN_ID" >> "$GITHUB_OUTPUT"
+          else
+            id=$(gh run list --workflow=build.yml --status=success --limit=1 --json databaseId --jq '.[0].databaseId')
+            if [ -z "$id" ]; then
+              echo "未找到成功的 Build 运行记录，请先运行 Build。" >&2
+              exit 1
+            fi
+            echo "id=$id" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 下载构建产物
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+          run-id: ${{ steps.runid.outputs.id }}
+          github-token: ${{ github.token }}
+
+      - name: 提取版本号
+        id: version
+        run: |
+          zip=$(ls dist/ | grep -v -- '-CHS\.zip' | head -n1)
+          ver="${zip#Compass Navigation Overhaul VR }"
+          ver="${ver%.zip}"
+          if [ -z "$ver" ]; then
+            echo "无法从产物文件名提取版本号：$zip" >&2
+            exit 1
+          fi
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+
+      - name: 发布 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Compass Navigation Overhaul VR ${{ steps.version.outputs.version }}
+          body: ""
+          files: dist/*.zip
