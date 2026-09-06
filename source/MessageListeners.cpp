@@ -33,6 +33,7 @@ static void ApplyAllSettings()
 	{
 		questItemList->UpdateLayout();
 		questItemList->SetMaxHeight(settings::questlist::maxHeight);
+		questItemList->SetTextScale(settings::questlist::textScale);
 	}
 }
 

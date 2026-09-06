@@ -36,6 +36,11 @@ namespace settings
 				useMetricUnits = a_setting->GetBool();
 				return;
 			}
+			if (name == "fMarkerTextScale:Display")
+			{
+				markerTextScale = a_setting->GetFloat();
+				return;
+			}
 			if (name == "uUndiscoveredLocationMarkers:Display")
 			{
 				// 三态：0=隐藏 / 1="?" / 2=正常图标
@@ -101,6 +106,11 @@ namespace settings
 			if (name == "fPositionY:QuestList")
 			{
 				positionY = a_setting->GetFloat();
+				return;
+			}
+			if (name == "fTextScale:QuestList")
+			{
+				textScale = a_setting->GetFloat();
 				return;
 			}
 			if (name == "fMaxHeight:QuestList")
@@ -193,6 +203,7 @@ namespace settings
 				using namespace display;
 				iniSettingCollection->AddSettings(
 					MakeSetting("bUseMetricUnits:Display", useMetricUnits),
+					MakeSetting("fMarkerTextScale:Display", markerTextScale),
 					MakeSetting("uUndiscoveredLocationMarkers:Display", static_cast<std::uint32_t>(undiscoveredLocationMarkers)),
 					MakeSetting("bShowUndiscoveredLocationInfo:Display", showUndiscoveredLocationInfo),
 					MakeSetting("bShowEnemyMarkers:Display", showEnemyMarkers),
@@ -209,6 +220,7 @@ namespace settings
 				iniSettingCollection->AddSettings(
 					MakeSetting("fPositionX:QuestList", positionX),
 					MakeSetting("fPositionY:QuestList", positionY),
+					MakeSetting("fTextScale:QuestList", textScale),
 					MakeSetting("fMaxHeight:QuestList", maxHeight),
 					MakeSetting("bShowInExteriors:QuestList", showInExteriors),
 					MakeSetting("bShowInInteriors:QuestList", showInInteriors),

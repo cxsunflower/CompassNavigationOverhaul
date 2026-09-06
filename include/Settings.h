@@ -33,6 +33,7 @@ namespace settings
 	namespace display
 	{
 		inline bool useMetricUnits = true;
+		inline float markerTextScale = 100.0F;
 
 		inline UndiscoveredLocationMarkers undiscoveredLocationMarkers = UndiscoveredLocationMarkers::kHidden;
 
@@ -58,6 +59,7 @@ namespace settings
 	{
 		inline float positionX = 0.008F;
 		inline float positionY = 0.125F;
+		inline float textScale = 100.0F;
 
 		inline float maxHeight = 0.675F;
 
