@@ -64,6 +64,13 @@ namespace CNO
 										   a_markerIndex);
 		}
 
+		IUI::GFxDisplayObject GetFocusedMarkerTargetTextField()
+		{
+			IUI::GFxDisplayObject focusedMarkerInfo{ GetMember("FocusedMarkerInfo") };
+			IUI::GFxDisplayObject target{ focusedMarkerInfo.GetMember("Target") };
+			return target.GetMember("TextFieldInstance");
+		}
+
 		void FocusMarker()
 		{
 			Invoke("FocusMarker");

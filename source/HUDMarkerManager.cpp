@@ -317,6 +317,11 @@ namespace CNO
 					}
 				}
 			}
+
+			if (targetQuestMarker && displayedQuestMarker == targetQuestMarker)
+			{
+				questItemList->AnchorBelow(compass->GetFocusedMarkerTargetTextField());
+			}
 		}
 
 		facedMarkers.clear();

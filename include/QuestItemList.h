@@ -79,10 +79,59 @@ public:
 		SetDisplayInfo(displayInfo);
 	}
 
+	// Keep the quest list attached directly below the focused quest name.
+	void AnchorBelow(IUI::GFxDisplayObject a_anchorTextField, float a_gap = 6.0F)
+	{
+		RE::GPointF anchor = a_anchorTextField.LocalToGlobal();
+
+		const RE::GFxValue anchorWidthValue = a_anchorTextField.GetMember("_width");
+		const RE::GFxValue anchorHeightValue = a_anchorTextField.GetMember("_height");
+		const float anchorWidth = anchorWidthValue.IsNumber() ? static_cast<float>(anchorWidthValue.GetNumber()) : 0.0F;
+		const float anchorHeight = anchorHeightValue.IsNumber() ? static_cast<float>(anchorHeightValue.GetNumber()) : 0.0F;
+
+		anchor.x += anchorWidth * 0.5F;
+		anchor.y += anchorHeight + a_gap;
+
+		const RE::GFxValue parentValue = GetMember("_parent");
+		if (!parentValue.IsDisplayObject())
+		{
+			return;
+		}
+
+		IUI::GFxDisplayObject parent{ parentValue };
+		IUI::GFxObject point{ GetMovieView() };
+		RE::GFxValue x = anchor.x;
+		RE::GFxValue y = anchor.y;
+		point.SetMember("x", x);
+		point.SetMember("y", y);
+		parent.Invoke("globalToLocal", point);
+
+		const RE::GFxValue localXValue = point.GetMember("x");
+		const RE::GFxValue localYValue = point.GetMember("y");
+		if (!localXValue.IsNumber() || !localYValue.IsNumber())
+		{
+			return;
+		}
+
+		const RE::GFxValue listWidthValue = GetMember("_width");
+		const float listWidth = listWidthValue.IsNumber() ? static_cast<float>(listWidthValue.GetNumber()) : 0.0F;
+
+		RE::GFxValue::DisplayInfo displayInfo;
+		GetDisplayInfo(&displayInfo);
+		displayInfo.SetX(localXValue.GetNumber() - listWidth * 0.5F);
+		displayInfo.SetY(localYValue.GetNumber());
+		SetDisplayInfo(displayInfo);
+	}
+
 	// 将最大高度同步到 ActionScript。
 	void SetMaxHeight(float a_maxHeight)
 	{
 		Invoke("SetMaxHeight", a_maxHeight);
+	}
+
+	void SetTextScale(float a_scale)
+	{
+		Invoke("SetTextScale", a_scale);
 	}
 
 	void AddToHudElements()

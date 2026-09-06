@@ -12,6 +12,7 @@ var positionY0:Number;
 var maxHeight:Number;
 
 var SCALE:Number = 65;
+var TEXT_SCALE:Number = 100;
 
 function QuestItemList(a_positionX:Number, a_positionY:Number, a_maxHeight:Number):Void
 {
@@ -43,12 +44,23 @@ function AddToHudElements():Void
 
 function AddQuest(a_type:Number, a_title:String, a_isInSameLocation:Boolean, a_objectives:Array, a_ageIndex:Number):Void
 {
-	questItem = attachMovie("QuestItem", "questItem", getNextHighestDepth(), { _xscale:SCALE, _yscale:SCALE });
+	questItem = attachMovie("QuestItem", "questItem", getNextHighestDepth(), { _xscale:SCALE * TEXT_SCALE / 100, _yscale:SCALE * TEXT_SCALE / 100 });
 
 	entries.push(questItem);
 
 	questItem.SetQuestInfo(a_type, a_title, a_isInSameLocation, a_objectives, a_ageIndex);
 	questItem.gotoAndStop("IdleHide");
+}
+
+function SetTextScale(a_scale:Number):Void
+{
+	TEXT_SCALE = a_scale;
+
+	for (var i:Number = 0; i < entries.length; i++)
+	{
+		entries[i]._xscale = SCALE * TEXT_SCALE / 100;
+		entries[i]._yscale = SCALE * TEXT_SCALE / 100;
+	}
 }
 
 function SetQuestSide(a_side:String):Void
