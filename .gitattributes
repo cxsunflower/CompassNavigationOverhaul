@@ -31,3 +31,7 @@
 
 # Ghidra 反编译证据保留原始空白，不参与提交空白检查。
 decompiled/** whitespace=-trailing-space,-blank-at-eof
+# Byte-exact SWF build inputs: preserve line endings used by hash manifests.
+swf/*.as -text
+swf/questlist/**/*.as -text
+tools/*.py -text

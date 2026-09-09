@@ -1,27 +1,77 @@
-# ---- 编译 / IDE 产物 ----
+# Build and package outputs
+build/
+build-*/
+cmake-build-*/
+out/
+dist/
+
+# Compiler and linker intermediates
+*.o
+*.obj
+*.pch
+*.gch
+*.pdb
+*.idb
+*.ilk
+*.ipch
+*.tlog
+*.dSYM/
+
+# CMake / CTest / Ninja
+CMakeFiles/
+CMakeCache.txt
+CMakeUserPresets.json
+CMakeSettings.json
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+build.ninja
+rules.ninja
+.ninja_deps
+.ninja_log
+compile_commands.json
+
+# Dependencies and caches
+vcpkg_installed/
+node_modules/
+cache/
+.cache/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# IDE and local user settings
 .vs/
 .vscode/
 .idea/
-build/
-out/
 *.user
+*.suo
+*.VC.db
+*.VC.VC.opendb
 
-# ---- 打包产物 ----
-# build.bat 输出的 zip
-dist/
-# 静态打包输入位于 assets/；build/package/ 已由上面的 build/ 规则覆盖。
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.bak-*
+*.swp
+*.swo
+*~
 
-# ---- vcpkg（清单模式在源码树内安装时）----
-vcpkg_installed/
-
-# ---- CMake 个人配置（因机器而异，不共享）----
-CMakeUserPresets.json
-CMakeSettings.json
-
-# ---- tools\ 下 Python 脚本的缓存 ----
-__pycache__/
-*.pyc
-
-# ---- 系统垃圾 ----
+# Operating system metadata
+.DS_Store
+._*
 Thumbs.db
 Desktop.ini
+$RECYCLE.BIN/
+
+# Keep source assets, dependency lockfiles and shared project settings.
+# Do not blanket-ignore binary resources or all JSON/configuration files.
+
+# Private project-management mappings
+/manager/privacy.md
