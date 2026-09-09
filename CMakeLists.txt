@@ -2,9 +2,10 @@ cmake_minimum_required(VERSION 3.21)
 
 # 项目
 
-# CMake 与 build.bat 共用 VERSION。
-file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" CNO_VERSION LIMIT_COUNT 1)
-string(STRIP "${CNO_VERSION}" CNO_VERSION)
+# CMake 与 build.bat 共用 vcpkg.json 中的版本号。
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg.json" CNO_VERSION_LINE REGEX "version-string")
+string(REGEX MATCH "version-string[^\"]*\"[ ]*:[ ]*\"([^\"]+)\"" _ "${CNO_VERSION_LINE}")
+set(CNO_VERSION "${CMAKE_MATCH_1}")
 
 project(
 	CompassNavigationOverhaulVR
@@ -23,8 +24,8 @@ configure_file(
 	@ONLY
 )
 
-file(GLOB_RECURSE headers "include/*.h")
-file(GLOB_RECURSE sources "source/*.cpp")
+file(GLOB_RECURSE headers CONFIGURE_DEPENDS "include/*.h" "source/*.h")
+file(GLOB_RECURSE sources CONFIGURE_DEPENDS "source/*.cpp")
 
 source_group(
 	TREE
@@ -36,7 +37,19 @@ source_group(
 
 # DLL 目标
 
-find_package(CommonLibSSE CONFIG REQUIRED)
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/lib/CommonLibSSE-NG/CMakeLists.txt")
+	message(STATUS "Using local CommonLibSSE-NG from lib/CommonLibSSE-NG")
+	set(BUILD_TESTS OFF CACHE BOOL "Disable CommonLibSSE-NG tests" FORCE)
+	set(SKSE_SUPPORT_XBYAK ON CACHE BOOL "Enable Xbyak trampoline support" FORCE)
+	add_subdirectory(
+		lib/CommonLibSSE-NG
+		${CMAKE_CURRENT_BINARY_DIR}/CommonLibSSE-NG
+		EXCLUDE_FROM_ALL
+	)
+	include(${CMAKE_CURRENT_SOURCE_DIR}/lib/CommonLibSSE-NG/cmake/CommonLibSSE.cmake)
+else()
+	find_package(CommonLibSSE CONFIG REQUIRED)
+endif()
 find_package(spdlog REQUIRED CONFIG)
 find_package(directxtk CONFIG REQUIRED)
 
