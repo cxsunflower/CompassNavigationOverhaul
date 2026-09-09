@@ -2,6 +2,24 @@
 
 **English** · [简体中文](README.zh-CN.md)
 
+## First build
+
+1. Install Visual Studio (Desktop C++), CMake 3.21+, Ninja and Git, and bootstrap [vcpkg](https://github.com/microsoft/vcpkg).
+2. Get the source (replace `<repository-url>` with the repository URL):
+
+   ```bat
+   git clone --recurse-submodules <repository-url> CompassNavigationOverhaul
+   cd CompassNavigationOverhaul
+   ```
+
+3. Set `VS_VCVARS` and `VCPKG_ROOT_CFG` at the top of `build.bat` ([other settings](#buildbat-values)), then run:
+
+   ```bat
+   build.bat
+   ```
+
+The first build downloads and compiles dependencies. Packages land in `build\package`; archives land in `dist` (requires 7-Zip). Nothing is deployed to MO2 automatically.
+
 ## Project layout
 
 ```text
@@ -52,7 +70,6 @@ build.bat nobuild   package the existing build\relwithdebinfo-vr-only\CompassNav
 build.bat clean     delete build\, then full configure, build, and package
 ```
 
-Prerequisites: Visual Studio with the Desktop C++ workload, CMake 3.21+ and Ninja (the Visual Studio-bundled copies work), Git, and a bootstrapped [vcpkg](https://github.com/microsoft/vcpkg). The first configure downloads and builds the dependencies locked by `vcpkg.json`.
 
 ## Documentation and SWF workflow
 

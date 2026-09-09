@@ -2,6 +2,24 @@
 
 [English](README.md) · **简体中文**
 
+## 首次构建
+
+1. 安装 Visual Studio（C++ 桌面开发）、CMake 3.21+、Ninja、Git，并完成 [vcpkg](https://github.com/microsoft/vcpkg) 的 bootstrap。
+2. 获取源码（将 `<repository-url>` 换成仓库地址）：
+
+   ```bat
+   git clone --recurse-submodules <repository-url> CompassNavigationOverhaul
+   cd CompassNavigationOverhaul
+   ```
+
+3. 在 `build.bat` 顶部设置 `VS_VCVARS` 和 `VCPKG_ROOT_CFG`（[其他配置](#buildbat-配置值)），然后运行：
+
+   ```bat
+   build.bat
+   ```
+
+首次构建会下载并编译依赖；打包目录在 `build\package`，压缩包在 `dist`（需 7-Zip）。不会自动部署到 MO2。
+
 ## 项目目录结构
 
 ```text
@@ -52,7 +70,6 @@ build.bat nobuild   不编译，直接打包已有的 build\relwithdebinfo-vr-on
 build.bat clean     删除 build\ 后完整配置、编译并打包
 ```
 
-环境要求：Visual Studio（“使用 C++ 的桌面开发”工作负载）、CMake 3.21+ 与 Ninja（可直接使用 Visual Studio 自带版本）、Git，以及完成 bootstrap 的 [vcpkg](https://github.com/microsoft/vcpkg)。首次配置会下载并编译 `vcpkg.json` 锁定的依赖。
 
 ## 文档与 SWF 工作流
 
