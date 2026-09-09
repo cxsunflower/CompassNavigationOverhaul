@@ -1,4 +1,5 @@
 #include "utils/INISettingCollection.h"
+#include "utils/INIInput.h"
 
 #include "utils/Logger.h"
 
@@ -21,8 +22,15 @@ namespace utils
 	bool INISettingCollection::ReadFromFile(std::string_view a_dataRelativePath)
 	{
 		std::filesystem::path iniPath = std::filesystem::current_path().append("Data").append(a_dataRelativePath);
+		INIInput input(iniPath);
+		if (!input.IsValid())
+		{
+			logger::warn("Cannot prepare Data\\{}: {}", a_dataRelativePath, input.GetError());
+			subKey[0] = '\0';
+			return false;
+		}
 
-		const std::string iniPathStr = iniPath.string();
+		const std::string iniPathStr = input.GetPath().string();
 
 		// subKey 只有 MAX_PATH 字节，超长直接放弃，避免 strcpy_s 触发断言/越界。
 		if (iniPathStr.empty() || iniPathStr.size() >= MAX_PATH)
@@ -36,6 +44,10 @@ namespace utils
 		if (_this()->OpenHandle(false)) {
 			_this()->ReadAllSettings();
 			_this()->CloseHandle();
+			if (input.WasNormalized())
+			{
+				logger::info("Loaded UTF-8 BOM INI through a temporary normalized view: Data\\{}", a_dataRelativePath);
+			}
 
 			return true;
 		}
