@@ -61,17 +61,50 @@ function SetUnits(a_useMetric:Boolean):Void
 	FocusedMarkerInfo.UseMetricUnits = a_useMetric;
 }
 
+function SetMarkerTextScale(a_scale:Number):Void
+{
+	// 百分比直传：_xscale 即百分比；旧式除 100 会把文字缩到 1%。
+	FocusedMarkerInfo.SetTextScale(a_scale);
+}
+
+function SetMarkerNameScale(a_scale:Number):Void
+{
+	FocusedMarkerInfo.SetNameScale(a_scale);
+}
+
+function SetMarkerDistanceScale(a_scale:Number):Void
+{
+	FocusedMarkerInfo.SetDistanceScale(a_scale);
+}
+
+// Diagnostic only: sampled after settings apply, not on every display frame.
+function GetMarkerScaleState():String
+{
+	var info:MovieClip = FocusedMarkerInfo;
+	var name:TextField = info.Target.TextFieldInstance;
+	var distance:TextField = info.Distance.TextFieldInstance;
+	return "classMethods=" + typeof(info.SetNameScale) + "," + typeof(info.SetDistanceScale) +
+		"; requested=" + info.NameScale + "," + info.DistanceScale +
+		"; actual=" + name._xscale + "," + name._yscale + "," + distance._xscale + "," + distance._yscale +
+		"; nameRect=" + name._x + "," + name._y + "," + name._width + "," + name._height +
+		"; distanceRect=" + distance._x + "," + distance._y + "," + distance._width + "," + distance._height +
+		"; stage=" + Stage.width + "," + Stage.height;
+}
+
 function SetFocusedMarkerInfo(a_target:String, a_distance:Number, a_heightDifference:Number, a_markerIndex:Number):Void
 {
 	FocusedMarkerInfo.SetDistanceAndHeightDifference(a_distance, a_heightDifference);
 	FocusedMarkerInfo.Movie = MarkerList[a_markerIndex].movie;
 	FocusedMarkerInfo.Index = a_markerIndex;
 	FocusedMarkerInfo.Target.TextFieldInstance.text = a_target;
+	FocusedMarkerInfo.ApplyNameViewportGuard();
 }
 
 function FocusMarker():Void
 {
+	FocusedMarkerInfo.Target.TextFieldInstance._visible = false;
 	FocusedMarkerInfo.gotoAndPlay("FadeIn");
+	FocusedMarkerInfo.ApplyNameViewportGuard();
 }
 
 function UpdateFocusedMarker():Void
@@ -124,6 +157,7 @@ function UpdateFocusedMarker():Void
 function UnfocusMarker():Void
 {
 	FocusedMarkerInfo.gotoAndPlay("FadeOut");
+	FocusedMarkerInfo.ApplyNameViewportGuard();
 	FocusedMarkerInfo.Movie = undefined;
 }
 
@@ -190,3 +224,9 @@ function SetMarkers():Void
 		marker_mc._yscale = markerScale;
 	}
 }
+
+// 旧基底主时间轴三语句（2.12.0 基底重编时从旧二进制补回）：
+// gfxExtensions 开关 Scaleform 扩展 API；HeightIndicator 默认帧；stop 防止主时间轴（共 2 帧）走帧。
+_global.gfxExtensions = true;
+HeightIndicatorInstance.gotoAndStop("Above");
+stop();
