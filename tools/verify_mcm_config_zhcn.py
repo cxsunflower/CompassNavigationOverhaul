@@ -12,7 +12,7 @@
   B. JSON 合法，且键集合、嵌套形状逐层一致
   C. 不该动的字段逐字节相同：modName / displayName / customContent.source /
      每个 id / type / sourceType / min / max / step / position / cursorFillMode
-  D. 18 个 id 齐全且无重复
+  D. 29 个 id 齐全且无重复
   E. formatString 里的 {N} 占位符序列完全一致
   F. 该翻译的字段（pageDisplayName、header 的 text、控件的 text 与 help、
      stepper 的 options、formatString 的单位）确实变了、且含中日韩字符；
@@ -25,6 +25,8 @@
 退出码 0 = 全部通过。
 """
 
+import configparser
+from decimal import Decimal, InvalidOperation
 import json
 import pathlib
 import re
@@ -35,13 +37,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 CFG_REL = pathlib.Path("MCM") / "Config" / "Compass Navigation Overhaul VR" / "config.json"
 MCM_ASSET_DIR = ROOT / "assets" / "main" / CFG_REL.parent
 EN = MCM_ASSET_DIR / "config.json"
-ZH = MCM_ASSET_DIR / "config.zh-CN.json"
+ZH = ROOT / "assets/localization/zh-CN" / CFG_REL
 STAGE = ROOT / "build" / "package"
 PKG = STAGE / "main" / CFG_REL
 PKG_ZH = STAGE / "chs" / CFG_REL
 
-# 刻意保留英文的词：日志级别名要和 CompassNavigationOverhaul.log 里的字样对得上
-ALLOWED_ASCII_WORDS = {"Trace", "Debug", "Info", "Warning", "Error", "Critical"}
+# 刻意保留的日志级别名和配置标识符，需与实际 INI 键名一致。
+ALLOWED_ASCII_WORDS = {"Trace", "Debug", "Info", "Warning", "Error", "Critical", "INI"}
 
 # 不允许翻译、必须逐字节相同的键
 FROZEN_KEYS = {
@@ -169,7 +171,7 @@ def check_format(en: str, zh: str, path: str) -> None:
 
 
 def check_ids(en: dict, zh: dict) -> None:
-    """D 项：18 个 id 齐全、无重复、两边一致。"""
+    """D 项：29 个 id 齐全、无重复、两边一致。"""
     def collect(doc: dict) -> "list[str]":
         out = []
         for page in doc.get("pages", []):
@@ -184,8 +186,8 @@ def check_ids(en: dict, zh: dict) -> None:
     if len(set(zh_ids)) != len(zh_ids):
         dup = sorted({i for i in zh_ids if zh_ids.count(i) > 1})
         fail(f"id 有重复：{dup}")
-    if len(zh_ids) != 18:
-        fail(f"id 个数是 {len(zh_ids)}，应为 18（对应 Settings.h 里的 18 个键）")
+    if len(zh_ids) != 29:
+        fail(f"id 个数是 {len(zh_ids)}，应为 29")
 
 
 def check_packaged() -> str:
@@ -203,7 +205,7 @@ def check_packaged() -> str:
     notes = []
     for label, path, master, master_name in (
         ("主包", PKG, EN, "assets/main/MCM/Config/Compass Navigation Overhaul VR/config.json"),
-        ("汉化包", PKG_ZH, ZH, "assets/main/MCM/Config/Compass Navigation Overhaul VR/config.zh-CN.json"),
+        ("汉化包", PKG_ZH, ZH, "assets/localization/zh-CN/MCM/Config/Compass Navigation Overhaul VR/config.json"),
     ):
         if not path.is_file():
             fail(f"{label}里没有 config.json：{path} —— 打包会缺菜单描述文件")
@@ -221,6 +223,73 @@ def check_packaged() -> str:
         fail(f"{label}那份 config.json 与 {master_name} 不逐字节相同：{path}\n        {hint}")
         notes.append(f"{label} 对不上 {master_name}")
     return "；".join(notes)
+
+
+def read_settings_bindings(source_path=None) -> str:
+    """Read both native binding modules, or an explicit test fixture."""
+    if source_path is not None:
+        return pathlib.Path(source_path).read_text(encoding="utf-8-sig")
+    return "\n".join(
+        (ROOT / "source" / "settings" / name).read_text(encoding="utf-8-sig")
+        for name in ("Registration.cpp", "Dispatch.cpp")
+    )
+
+
+def check_bindings(en: dict, zh: dict, ini_path=None, source_path=None) -> None:
+    """Validate section-qualified IDs, control types and numeric help defaults."""
+    ini_path = ini_path or MCM_ASSET_DIR / "settings.ini"
+    ini = configparser.ConfigParser(interpolation=None, strict=True)
+    ini.optionxform = str
+    try:
+        ini.read_string(pathlib.Path(ini_path).read_text(encoding="utf-8-sig"))
+        source = read_settings_bindings(source_path)
+    except (OSError, UnicodeError, configparser.Error) as exc:
+        fail(f"Settings input: {exc}")
+        return
+    for language, doc in (("en", en), ("zh", zh)):
+        for page in doc.get("pages", []):
+            for item in page.get("content", []):
+                setting_id = item.get("id")
+                if not setting_id:
+                    continue
+                if not isinstance(setting_id, str) or setting_id.count(":") != 1:
+                    fail(f"{language}: invalid setting id {setting_id!r}")
+                    continue
+                key, section = setting_id.split(":")
+                if not ini.has_option(section, key):
+                    fail(f"{language}: {setting_id} missing from settings.ini [{section}]")
+                    continue
+                if not re.search(r'MakeSetting\(\s*"' + re.escape(setting_id) + r'"', source):
+                    fail(f"{setting_id}: missing C++ registration")
+                if not re.search(r'name\s*==\s*"' + re.escape(setting_id) + r'"', source):
+                    fail(f"{setting_id}: missing C++ change handler")
+                options = item.get("valueOptions", {})
+                expected_type = {"b": "ModSettingBool", "u": "ModSettingInt", "f": "ModSettingFloat"}.get(key[:1])
+                if options.get("sourceType") != expected_type or expected_type is None:
+                    fail(f"{setting_id}: sourceType disagrees with setting prefix")
+                try:
+                    value = Decimal(ini[section][key])
+                    if not value.is_finite():
+                        raise InvalidOperation
+                    if key.startswith("b") and value not in (0, 1):
+                        fail(f"{setting_id}: boolean default must be 0 or 1")
+                    if key.startswith("u") and (value < 0 or value != value.to_integral_value()):
+                        fail(f"{setting_id}: unsigned integer default required")
+                    if item.get("type") == "slider":
+                        low, high, step = (Decimal(str(options[k])) for k in ("min", "max", "step"))
+                        if not all(x.is_finite() for x in (low, high, step)) or not low <= value <= high or step <= 0:
+                            fail(f"{setting_id}: invalid slider range/default/step")
+                    elif item.get("type") == "stepper":
+                        if value != value.to_integral_value() or not 0 <= value < len(options["options"]):
+                            fail(f"{setting_id}: default outside stepper options")
+                    elif item.get("type") != "toggle":
+                        fail(f"{setting_id}: unsupported setting control type")
+                    label = "Default:" if language == "en" else "默认："
+                    match = re.search(re.escape(label) + r"\s*([-+]?\d+(?:\.\d+)?)", item.get("help", ""))
+                    if match and Decimal(match.group(1)) != value:
+                        fail(f"{language}: {setting_id} help default {match.group(1)} != INI {value}")
+                except (InvalidOperation, KeyError, TypeError, ValueError) as exc:
+                    fail(f"{setting_id}: invalid numeric configuration ({exc})")
 
 
 def main() -> int:
@@ -256,6 +325,7 @@ def main() -> int:
     if en_doc is not None and zh_doc is not None:
         walk(en_doc, zh_doc, "$")
         check_ids(en_doc, zh_doc)
+        check_bindings(en_doc, zh_doc)
         # modName 和 displayName 不参与翻译。
         if zh_doc.get("displayName") != "Compass Navigation Overhaul VR":
             fail(f'displayName 必须保持 "Compass Navigation Overhaul VR"，实际是 {zh_doc.get("displayName")!r}')
@@ -272,7 +342,8 @@ def main() -> int:
     print(f"       冻结字段 {checked['frozen']} 处逐字节相同")
     print(f"       文案字段 {checked['prose']} 处（含 options 逐项）已译且无英文残留")
     print(f"       {checked['options']} 个 stepper 选项数组、{checked['format']} 个 formatString 占位符一致")
-    print(f"       18 个 id、type、sourceType、min/max/step 一律未改动")
+    print(f"       29 个 id、type、sourceType、min/max/step 一律未改动")
+    print("       INI sections, numeric help defaults and C++ bindings verified")
     print(f"       构建暂存副本：{packaged}")
     return 0
 

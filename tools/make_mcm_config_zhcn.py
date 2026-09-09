@@ -6,10 +6,10 @@ import pathlib
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-# 英文 config.json 与中文母本放在同一 MCM 资源目录。
+# 主包与中文覆盖包各自保持游戏安装路径。
 MCM_CONFIG = ROOT / "assets" / "main" / "MCM" / "Config" / "Compass Navigation Overhaul VR"
 SRC = MCM_CONFIG / "config.json"
-DST = MCM_CONFIG / "config.zh-CN.json"
+DST = ROOT / "assets/localization/zh-CN/MCM/Config/Compass Navigation Overhaul VR/config.json"
 
 # modName 必须匹配 ESP 主干；结构字段、占位符和度数符号均不得翻译。
 RULES: "list[tuple[str, str, int]]" = []
@@ -85,16 +85,9 @@ RULES += [
 # 任务列表页
 RULES += [
     ('"text": "X Offset",', '"text": "横向偏移",', 1),
-    ('"help": "Horizontal offset of the quest list. Wide-screen users might want to set this negative or greater than 1 (in screen width proportion).\\nDefault: 0.01",',
-     '"help": "任务列表的横向偏移，单位是屏幕宽度的比例。宽屏用户可能需要设成负数或大于 1。\\n默认：0.01",', 1),
-
+    ('"help": "Horizontal offset from the compass text anchor, in HUD coordinates. Positive moves right; negative moves left. Still follows the compass.\\nDefault: 0",', '"help": "相对罗盘文字锚点的横向偏移，单位为界面坐标。正值向右，负值向左；仍跟随罗盘。\\n默认：0",', 1),
     ('"text": "Y Offset",', '"text": "纵向偏移",', 1),
-    ('"help": "Vertical offset of the quest list.\\nDefault: 0.15",',
-     '"help": "任务列表的纵向偏移，单位是屏幕高度的比例。\\n默认：0.15",', 1),
-
-    ('"text": "Max Height",', '"text": "最大高度",', 1),
-    ('"help": "Maximum height of the quest list.\\nDefault: 0.67",',
-     '"help": "任务列表的最大高度，单位是屏幕高度的比例。\\n默认：0.67",', 1),
+    ('"help": "Vertical offset from the compass text anchor, in HUD coordinates. Positive moves down; negative moves up. Available height is automatic.\\nDefault: 0",', '"help": "相对罗盘文字锚点的纵向偏移，单位为界面坐标。正值向下，负值向上；可用高度自动计算。\\n默认：0",', 1),
 
     ('"text": "Show in Exteriors",', '"text": "室外显示",', 1),
     ('"help": "Show the quest list in exteriors.\\nDefault: Enabled",',
@@ -114,10 +107,68 @@ RULES += [
 # 调试页；保留英文级别名以便与日志对照。
 RULES += [
     ('"text": "Log Level",', '"text": "日志级别",', 1),
-    ('"help": "Sets the level of detail in the log.\\nDefault: Info",',
-     '"help": "设置日志的详细程度，级别越低记录越多。\\n默认：Info",', 1),
+    ('"help": "Sets the level of detail in the log. Trace and Debug also show the QuestList layout overlay with bounds, coordinates and sizes.\\nDefault: Info",',
+     '"help": "设置日志的详细程度，级别越低记录越多。Trace 和 Debug 同时显示任务列表布局调试框、坐标与尺寸。\\n默认：Info",', 1),
     ('"options": [ "Trace", "Debug", "Info", "Warning", "Error", "Critical Error" ],',
      '"options": [ "Trace 追踪", "Debug 调试", "Info 信息", "Warning 警告", "Error 错误", "Critical 严重错误" ],', 1),
+]
+
+# 罗盘注视门控（任务列表页末尾）。
+RULES += [
+    ('"text": "Compass Gaze ",', '"text": "罗盘注视 ",', 1),
+
+    ('"text": "Require Looking at Compass",', '"text": "需要注视罗盘",', 1),
+    ('"help": "Only show the quest list while your 3D gaze rests on the compass. A focused quest marker is still required.\\nDefault: Enabled",',
+     '"help": "只有 3D 视线落在罗盘上时才显示任务列表，之前仍需要先聚焦任务标记。\\n默认：开启",', 1),
+
+    ('"text": "Require Compass Visible",', '"text": "需要罗盘可见",', 1),
+    ('"help": "Hide the quest list while the compass itself is hidden (e.g. Palm Compass VR with the palm down).\\nDefault: Enabled",',
+     '"help": "罗盘本身隐藏时不显示任务列表（例如手掌放下后手掌罗盘隐藏的状态）。\\n默认：开启",', 1),
+
+    ('"text": "Gaze Detection Mode",', '"text": "注视检测模式",', 1),
+    ('"help": "How gaze is measured. Higher modes fall back automatically when their 3D node is missing.\\nDefault: Compass Node",',
+     '"help": "注视的测量方式。高档模式在 3D 节点缺失时会自动降级。\\n默认：罗盘节点",', 1),
+    ('"options": [ "Pitch Fallback", "Right Hand", "Compass Node" ],',
+     '"options": [ "俯角兜底", "右手", "罗盘节点" ],', 1),
+
+    ('"text": "Gaze Angle to Show",', '"text": "注视显示角度",', 1),
+    ('"help": "3D gaze angle to the compass or hand point that starts showing the list (modes 1-2).\\nDefault: 15º",',
+     '"help": "视线与罗盘/手部位置的 3D 夹角小于该值时开始显示（模式 1-2）。\\n默认：15º",', 1),
+
+    ('"text": "Gaze Angle to Keep",', '"text": "注视保持角度",', 1),
+    ('"help": "Once shown, the list hides only after this angle is exceeded (modes 1-2).\\nDefault: 25º",',
+     '"help": "已经显示后，夹角超过该值才隐藏（模式 1-2）。\\n默认：25º",', 1),
+
+    ('"text": "Max Gaze Distance",', '"text": "注视最大距离",', 1),
+    ('"help": "Gaze points farther than this are ignored. In game units, about 70 per meter.\\nDefault: 90",',
+     '"help": "超过该距离的注视点会被忽略。单位是游戏单位（约 70 单位=1 米）。\\n默认：90",', 1),
+
+    ('"text": "Pitch Angle to Show",', '"text": "俯角显示角度",', 1),
+    ('"help": "How far down you must look to show the list in Pitch mode (mode 0).\\nDefault: 18º",',
+     '"help": "俯角模式下，低头超过该角度才显示任务列表。\\n默认：18º",', 1),
+
+    ('"text": "Pitch Angle to Keep",', '"text": "俯角保持角度",', 1),
+    ('"help": "Once shown in Pitch mode, the list hides only after you look up past this angle.\\nDefault: 10º",',
+     '"help": "俯角模式下已经显示后，抬头超过该角度才隐藏。\\n默认：10º",', 1),
+
+    ('"text": "Compass on Palm",', '"text": "罗盘在手掌上",', 1),
+    ('"help": "Enable for Palm Compass VR: look DOWN at your palm. Disable if the compass floats above eye level: look UP instead.\\nDefault: Enabled",',
+     '"help": "手掌罗盘用户请开启：低头看手掌。关闭则适用于罗盘在视线上方的情况：抬头看。\\n默认：开启",', 1),
+]
+
+# 罗盘文字分开缩放 + 列表面板缩放。
+RULES += [
+    ('"text": "Quest/Location Name Size",', '"text": "任务/地点名称大小",', 1),
+    ('"help": "Text size of the quest/location name under the compass marker, in percent.\\nDefault: 100%",',
+     '"help": "罗盘标记下方任务/地点名称的文字大小，百分比。\\n默认：100%",', 1),
+
+    ('"text": "Distance Size",', '"text": "距离大小",', 1),
+    ('"help": "Size of the distance readout and above/below indicator, in percent.\\nDefault: 100%",',
+     '"help": "距离读数和海拔向上/向下图标的大小，百分比。\\n默认：100%",', 1),
+
+    ('"text": "Panel Size",', '"text": "面板大小",', 1),
+    ('"help": "Overall size of the quest list panel, in percent. Entries, text and icons scale together.\\nDefault: 100%",',
+     '"help": "任务列表面板的整体大小，百分比。条目、文字与图标一起缩放。\\n默认：100%",', 1),
 ]
 
 

@@ -1,0 +1,368 @@
+{
+	"modName": "Compass Navigation Overhaul VR",
+	"displayName": "Compass Navigation Overhaul VR",
+	"customContent": {
+		"source": "MCM/Compass Navigation Overhaul VR/splashart.swf"
+	},
+	"pages": [
+		{
+			"pageDisplayName": "罗盘",
+			"cursorFillMode": "topToBottom",
+			"content": [
+				{
+					"text": "标记 ",
+					"type": "header"
+				},
+				{
+					"id": "uUndiscoveredLocationMarkers:Display",
+					"text": "未发现的地点",
+					"help": "选择未发现的地图标记如何显示。\n默认：隐藏",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "隐藏", "「?」图标", "原本图标" ],
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "bShowEnemyMarkers:Display",
+					"text": "显示敌人",
+					"help": "默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowInteriorMarkers:Display",
+					"text": "透过传送门显示",
+					"help": "在外面时，透过传送门（例如城市入口）显示里面的地点与敌人。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"text": "控制 ",
+					"type": "header"
+				},
+				{
+					"id": "fAngleToShowMarkerDetails:Display",
+					"text": "视锥起始角度",
+					"help": "标记与罗盘中心的夹角小于该值时，开始显示标记详情。\n默认：10º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fAngleToKeepMarkerDetailsShown:Display",
+					"text": "视锥保持角度",
+					"help": "标记详情已经显示后，夹角超过该值才停止显示。\n默认：35º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fFocusingDelayToShow:Display",
+					"text": "视锥延迟",
+					"help": "标记进入罗盘中心后，延迟多久显示详情。\n默认：0.1 秒",
+					"type": "slider",
+					"valueOptions": {
+						"min": 0.05,
+						"max": 3.0,
+						"step": 0.05,
+						"formatString": "{2} 秒",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"text": "标记附加信息",
+					"type": "header",
+					"position": 1
+				},
+				{
+					"id": "bShowUndiscoveredLocationInfo:Display",
+					"text": "显示未发现地点的信息",
+					"help": "是否为未发现的地点标记显示名称与距离。\n默认：关闭",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowEnemyNameUnderMarker:Display",
+					"text": "显示敌人名称",
+					"help": "不在直接战斗中时，在罗盘的敌人标记下方显示敌人名称。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bUseMetricUnits:Display",
+					"text": "距离单位",
+					"help": "距离使用公制还是英制单位。\n默认：公制",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "英制", "公制" ],
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowObjectiveAsTarget:Display",
+					"text": "任务信息显示内容",
+					"help": "罗盘任务标记下方的文字显示地点还是任务目标。\n默认：任务目标",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "地点", "任务目标" ],
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowOtherObjectivesCount:Display",
+					"text": "显示其余目标数量",
+					"help": "在罗盘任务标记下方的文字后面追加目标数量，形如 (+2)。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "fMarkerNameScale:Display",
+					"text": "任务/地点名称大小",
+					"help": "罗盘标记下方任务/地点名称的文字大小，百分比。\n默认：100%",
+					"type": "slider",
+					"valueOptions": {
+						"min": 25,
+						"max": 150,
+						"step": 5,
+						"formatString": "{0} %",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fMarkerDistanceScale:Display",
+					"text": "距离大小",
+					"help": "距离读数和海拔向上/向下图标的大小，百分比。\n默认：100%",
+					"type": "slider",
+					"valueOptions": {
+						"min": 25,
+						"max": 150,
+						"step": 5,
+						"formatString": "{0} %",
+						"sourceType": "ModSettingFloat"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "任务列表",
+			"cursorFillMode": "topToBottom",
+			"content": [
+				{
+					"text": "显示 ",
+					"type": "header",
+					"position": 0
+				},
+				{
+					"id": "fOffsetX:QuestList",
+					"text": "横向偏移",
+					"help": "相对罗盘文字锚点的横向偏移，单位为界面坐标。正值向右，负值向左；仍跟随罗盘。\n默认：0",
+					"type": "slider",
+					"valueOptions": {
+						"min": -100,
+						"max": 100,
+						"step": 5,
+						"formatString": "{0}",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fOffsetY:QuestList",
+					"text": "纵向偏移",
+					"help": "相对罗盘文字锚点的纵向偏移，单位为界面坐标。正值向下，负值向上；可用高度自动计算。\n默认：0",
+					"type": "slider",
+					"valueOptions": {
+						"min": -100,
+						"max": 100,
+						"step": 5,
+						"formatString": "{0}",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fTextScale:QuestList",
+					"text": "面板大小",
+					"help": "任务列表面板的整体大小，百分比。条目、文字与图标一起缩放。\n默认：100%",
+					"type": "slider",
+					"valueOptions": {
+						"min": 25,
+						"max": 110,
+						"step": 5,
+						"formatString": "{0} %",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "bShowInExteriors:QuestList",
+					"text": "室外显示",
+					"help": "在室外显示任务列表。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bShowInInteriors:QuestList",
+					"text": "室内显示",
+					"help": "在室内显示任务列表。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bHideInCombat:QuestList",
+					"text": "战斗中隐藏",
+					"help": "拔出武器时隐藏任务列表。\n默认：关闭",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"text": "罗盘注视 ",
+					"type": "header",
+					"position": 1
+				},
+				{
+					"id": "bRequireLookingAtCompass:QuestList",
+					"text": "需要注视罗盘",
+					"help": "只有 3D 视线落在罗盘上时才显示任务列表，之前仍需要先聚焦任务标记。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bRequireCompassVisible:QuestList",
+					"text": "需要罗盘可见",
+					"help": "罗盘本身隐藏时不显示任务列表（例如手掌放下后手掌罗盘隐藏的状态）。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "uCompassGazeMode:QuestList",
+					"text": "注视检测模式",
+					"help": "注视的测量方式。高档模式在 3D 节点缺失时会自动降级。\n默认：罗盘节点",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "俯角兜底", "右手", "罗盘节点" ],
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "fCompassGazeAngleToShow:QuestList",
+					"text": "注视显示角度",
+					"help": "视线与罗盘/手部位置的 3D 夹角小于该值时开始显示（模式 1-2）。\n默认：15º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fCompassGazeAngleToKeep:QuestList",
+					"text": "注视保持角度",
+					"help": "已经显示后，夹角超过该值才隐藏（模式 1-2）。\n默认：25º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fCompassMaxDistance:QuestList",
+					"text": "注视最大距离",
+					"help": "超过该距离的注视点会被忽略。单位是游戏单位（约 70 单位=1 米）。\n默认：90",
+					"type": "slider",
+					"valueOptions": {
+						"min": 20,
+						"max": 300,
+						"step": 5,
+						"formatString": "{0}",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fCompassGazePitchToShow:QuestList",
+					"text": "俯角显示角度",
+					"help": "俯角模式下，低头超过该角度才显示任务列表。\n默认：18º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fCompassGazePitchToKeep:QuestList",
+					"text": "俯角保持角度",
+					"help": "俯角模式下已经显示后，抬头超过该角度才隐藏。\n默认：10º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "bCompassOnPalm:QuestList",
+					"text": "罗盘在手掌上",
+					"help": "手掌罗盘用户请开启：低头看手掌。关闭则适用于罗盘在视线上方的情况：抬头看。\n默认：开启",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				}
+			]
+		},
+		{
+			"pageDisplayName": "调试",
+			"cursorFillMode": "topToBottom",
+			"content": [
+				{
+					"id": "uLogLevel:Debug",
+					"text": "日志级别",
+					"help": "设置日志的详细程度，级别越低记录越多。Trace 和 Debug 同时显示任务列表布局调试框、坐标与尺寸。\n默认：Info",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "Trace 追踪", "Debug 调试", "Info 信息", "Warning 警告", "Error 错误", "Critical 严重错误" ],
+						"sourceType": "ModSettingInt"
+					}
+				}
+			]
+		}
+	]
+}
