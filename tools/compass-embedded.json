@@ -1,0 +1,9 @@
+{
+  "assets/generated/Compass.before-embedded.swf": "1c91834a9828d7ee3a5d26a3a1eefc5112e3a357812247201890786e2e0a5b14",
+  "assets/generated/QuestItemList.swf": "cea6a23f24f75b39332dd66e9b96525e19271b4e0b243a273c6dddd6a034d511",
+  "tools/embed_questlist_compass.py": "5ad65baa675dfdaa85cf6e493d86f7713245fa928d7079403ac16a8d53ca794d",
+  "tools/compass_passenger.py": "e4367ee69b97d1f81a3f83f9f2b1dd7dacc26fd936e530fee6ef2771dab2741e",
+  "swf/QuestItemList.as": "0197769f75e52f6611fe6759148826e43ec06be312f4fa84b197d61631610020",
+  "assets/main/Interface/InfinityUI/HUDMenu/HUDMovieBaseInstance/CompassShoutMeterHolder/Compass.swf": "1797ffa9ddfff9dcf62e4c8d33b48798b55f0299225cee80ea1f766c4b64f71c",
+  "assets/main/Interface/InfinityUI/VR_HMD_info/HUDMovieBaseInstance/CompassShoutMeterHolder/Compass.swf": "1797ffa9ddfff9dcf62e4c8d33b48798b55f0299225cee80ea1f766c4b64f71c"
+}
