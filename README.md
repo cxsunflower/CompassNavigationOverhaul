@@ -7,26 +7,29 @@
 ```text
 CompassNavigationOverhaul/
 ├── assets/
-│   └── main/                       Files copied verbatim into the release archives
-│       ├── Interface/InfinityUI/   HUD movies: HUDMenu (flat) and VR_HMD_info (VR)
-│       ├── MCM/Config/...          MCM Helper config: config.json, config.zh-CN.json, settings.ini
-│       ├── SKSE/Plugins/           CompassNavigationOverhaulVR.ini default user settings
-│       └── Compass Navigation Overhaul VR.esp   MCM shell plugin
+│   ├── main/                       English main package in game Data layout
+│   ├── localization/zh-CN/         Chinese overlay in the same Data layout
+│   ├── source/questlist/           Immutable SWF baselines and SVG artwork
+│   └── generated/                  QuestList and pre-embedding Compass movies
 ├── cmake/                          vcpkg toolchain overlays and the CommonLibSSE-NG port
 ├── decompiled/                     Decompiled reference sources from the original mod
+├── manager/                        Project context, feature docs, history and user manuals
 ├── include/                        RE type stubs, IUI/NND API headers, utilities
-├── source/                         SKSE plugin implementation
+├── source/                         SKSE implementation: hooks / hud / questlist / settings / ui
 ├── swf/                            ActionScript 2 sources and .fla projects for the HUD movies
 ├── tools/                          Python packaging, patching, and verification scripts
+├── AGENTS.md                       AI agent instructions (Git rules)
 ├── build.bat                       Build and package script
 ├── CMakeLists.txt
 ├── CMakePresets.json               build-relwithdebinfo-vr-only preset
+├── CommonLibSSE.natvis             Visual Studio debugger visualizers
 ├── vcpkg.json                      Dependency manifest for vcpkg
-├── VERSION                         Version string read by build.bat
 └── LICENSE
 ```
 
 Build outputs land in `build\relwithdebinfo-vr-only\CompassNavigationOverhaulVR.dll` (compiled DLL), `build\package` (staged package folders), and `dist` (release archives). The `build` and `dist` directories are generated and can be deleted at any time. The DLL, SKSE plugin name, and version resource are all derived from the CMake project name `CompassNavigationOverhaulVR`.
+
+Module responsibilities: [C++ navigation](source/README.md). Release inputs and artwork: [resource layout](assets/README.md).
 
 ## build.bat values
 
@@ -50,3 +53,18 @@ build.bat clean     delete build\, then full configure, build, and package
 ```
 
 Prerequisites: Visual Studio with the Desktop C++ workload, CMake 3.21+ and Ninja (the Visual Studio-bundled copies work), Git, and a bootstrapped [vcpkg](https://github.com/microsoft/vcpkg). The first configure downloads and builds the dependencies locked by `vcpkg.json`.
+
+## Documentation and SWF workflow
+
+- [Documentation index](manager/CONTEXT.md) · [Current QuestList behavior](manager/docs/quest-list.md) · [Historical notes](manager/docs/quest-list-history.md) (Chinese).
+- [Tool reference](tools/README.md): rebuilding SWFs also needs Python 3, Java and JPEXS `ffdec-cli.jar`; decompiled regression tests use Node.js.
+- After ActionScript changes, rebuild the affected SWF/Compass baseline, embed both Compass movies, verify, then package. `build.bat` checks hashes but does not compile ActionScript automatically.
+- `vcpkg.json` (`version-string`) is the single version source. Packaging does not deploy to MO2; VR acceptance is a separate step.
+
+## Version-control boundaries
+
+Ignore `build/`, `out/`, `dist/`, `cache/`, installed dependencies and local IDE/temporary files. Keep release inputs under `assets/`, AS2/FLA/SWF files, original and Compass baselines, SVG artwork, hash manifests and tests eligible for version control. Do not blanket-ignore binaries needed by the rebuild chain; review generated SWFs and manifests with their source changes.
+
+## Project-manager entry point
+
+Agents start with root AGENTS.md, then [CONTEXT](manager/CONTEXT.md) and [project conventions](manager/agents.md), loading details only as needed. See the [user manual](manager/user-manual/README.md) for player and developer workflows (Chinese). Project documentation is consolidated under manager/; the former root docs/ directory has been removed.
