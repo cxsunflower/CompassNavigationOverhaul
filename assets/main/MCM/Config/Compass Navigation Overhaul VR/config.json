@@ -135,6 +135,32 @@
 					"valueOptions": {
 						"sourceType": "ModSettingBool"
 					}
+				},
+				{
+					"id": "fMarkerNameScale:Display",
+					"text": "Quest/Location Name Size",
+					"help": "Text size of the quest/location name under the compass marker, in percent.\nDefault: 100%",
+					"type": "slider",
+					"valueOptions": {
+						"min": 25,
+						"max": 150,
+						"step": 5,
+						"formatString": "{0} %",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fMarkerDistanceScale:Display",
+					"text": "Distance Size",
+					"help": "Size of the distance readout and above/below indicator, in percent.\nDefault: 100%",
+					"type": "slider",
+					"valueOptions": {
+						"min": 25,
+						"max": 150,
+						"step": 5,
+						"formatString": "{0} %",
+						"sourceType": "ModSettingFloat"
+					}
 				}
 			]
 		},
@@ -144,44 +170,45 @@
 			"content": [
 				{
 					"text": "Display ",
-					"type": "header"
+					"type": "header",
+					"position": 0
 				},
 				{
-					"id": "fPositionX:QuestList",
+					"id": "fOffsetX:QuestList",
 					"text": "X Offset",
-					"help": "Horizontal offset of the quest list. Wide-screen users might want to set this negative or greater than 1 (in screen width proportion).\nDefault: 0.01",
+					"help": "Horizontal offset from the compass text anchor, in HUD coordinates. Positive moves right; negative moves left. Still follows the compass.\nDefault: 0",
 					"type": "slider",
 					"valueOptions": {
-						"min": -1,
-						"max": 2,
-						"step": 0.01,
-						"formatString": "{2}",
+						"min": -100,
+						"max": 100,
+						"step": 5,
+						"formatString": "{0}",
 						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
-					"id": "fPositionY:QuestList",
+					"id": "fOffsetY:QuestList",
 					"text": "Y Offset",
-					"help": "Vertical offset of the quest list.\nDefault: 0.15",
+					"help": "Vertical offset from the compass text anchor, in HUD coordinates. Positive moves down; negative moves up. Available height is automatic.\nDefault: 0",
 					"type": "slider",
 					"valueOptions": {
-						"min": 0,
-						"max": 1,
-						"step": 0.01,
-						"formatString": "{2}",
+						"min": -100,
+						"max": 100,
+						"step": 5,
+						"formatString": "{0}",
 						"sourceType": "ModSettingFloat"
 					}
 				},
 				{
-					"id": "fMaxHeight:QuestList",
-					"text": "Max Height",
-					"help": "Maximum height of the quest list.\nDefault: 0.67",
+					"id": "fTextScale:QuestList",
+					"text": "Panel Size",
+					"help": "Overall size of the quest list panel, in percent. Entries, text and icons scale together.\nDefault: 100%",
 					"type": "slider",
 					"valueOptions": {
-						"min": 0,
-						"max": 1,
-						"step": 0.01,
-						"formatString": "{2}",
+						"min": 25,
+						"max": 110,
+						"step": 5,
+						"formatString": "{0} %",
 						"sourceType": "ModSettingFloat"
 					}
 				},
@@ -211,6 +238,113 @@
 					"valueOptions": {
 						"sourceType": "ModSettingBool"
 					}
+				},
+				{
+					"text": "Compass Gaze ",
+					"type": "header",
+					"position": 1
+				},
+				{
+					"id": "bRequireLookingAtCompass:QuestList",
+					"text": "Require Looking at Compass",
+					"help": "Only show the quest list while your 3D gaze rests on the compass. A focused quest marker is still required.\nDefault: Enabled",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "bRequireCompassVisible:QuestList",
+					"text": "Require Compass Visible",
+					"help": "Hide the quest list while the compass itself is hidden (e.g. Palm Compass VR with the palm down).\nDefault: Enabled",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
+				},
+				{
+					"id": "uCompassGazeMode:QuestList",
+					"text": "Gaze Detection Mode",
+					"help": "How gaze is measured. Higher modes fall back automatically when their 3D node is missing.\nDefault: Compass Node",
+					"type": "stepper",
+					"valueOptions": {
+						"options": [ "Pitch Fallback", "Right Hand", "Compass Node" ],
+						"sourceType": "ModSettingInt"
+					}
+				},
+				{
+					"id": "fCompassGazeAngleToShow:QuestList",
+					"text": "Gaze Angle to Show",
+					"help": "3D gaze angle to the compass or hand point that starts showing the list (modes 1-2).\nDefault: 15º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fCompassGazeAngleToKeep:QuestList",
+					"text": "Gaze Angle to Keep",
+					"help": "Once shown, the list hides only after this angle is exceeded (modes 1-2).\nDefault: 25º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 1,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fCompassMaxDistance:QuestList",
+					"text": "Max Gaze Distance",
+					"help": "Gaze points farther than this are ignored. In game units, about 70 per meter.\nDefault: 90",
+					"type": "slider",
+					"valueOptions": {
+						"min": 20,
+						"max": 300,
+						"step": 5,
+						"formatString": "{0}",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fCompassGazePitchToShow:QuestList",
+					"text": "Pitch Angle to Show",
+					"help": "How far down you must look to show the list in Pitch mode (mode 0).\nDefault: 18º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "fCompassGazePitchToKeep:QuestList",
+					"text": "Pitch Angle to Keep",
+					"help": "Once shown in Pitch mode, the list hides only after you look up past this angle.\nDefault: 10º",
+					"type": "slider",
+					"valueOptions": {
+						"min": 0,
+						"max": 90,
+						"step": 1,
+						"formatString": "{0} º",
+						"sourceType": "ModSettingFloat"
+					}
+				},
+				{
+					"id": "bCompassOnPalm:QuestList",
+					"text": "Compass on Palm",
+					"help": "Enable for Palm Compass VR: look DOWN at your palm. Disable if the compass floats above eye level: look UP instead.\nDefault: Enabled",
+					"type": "toggle",
+					"valueOptions": {
+						"sourceType": "ModSettingBool"
+					}
 				}
 			]
 		},
@@ -221,7 +355,7 @@
 				{
 					"id": "uLogLevel:Debug",
 					"text": "Log Level",
-					"help": "Sets the level of detail in the log.\nDefault: Info",
+					"help": "Sets the level of detail in the log. Trace and Debug also show the QuestList layout overlay with bounds, coordinates and sizes.\nDefault: Info",
 					"type": "stepper",
 					"valueOptions": {
 						"options": [ "Trace", "Debug", "Info", "Warning", "Error", "Critical Error" ],
