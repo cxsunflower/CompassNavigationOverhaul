@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Settings.h"
-
 #include "IUI/GFxDisplayObject.h"
 
 #include "utils/Geometry.h"
@@ -30,61 +28,32 @@ namespace CNO
 
 		static constexpr inline std::string_view path = "_level0.HUDMovieBaseInstance.CompassShoutMeterHolder.Compass";
 
-		static void InitSingleton(const GFxDisplayObject& a_originalCompass)
-		{
-			if (!singleton)
-			{
-				static Compass singletonInstance{ a_originalCompass };
-				singleton = &singletonInstance;
-			}
-		}
+		static void InitSingleton(const GFxDisplayObject& a_originalCompass);
 
 		static Compass* GetSingleton() { return singleton; }
 
-		void SetupMod(const GFxDisplayObject& a_replaceCompass)
-		{
-			if (a_replaceCompass.HasMember("Compass"))
-			{
-				*static_cast<GFxDisplayObject*>(this) = a_replaceCompass;
-
-				Invoke("Compass");
-			}
-		}
+		void SetupMod(const GFxDisplayObject& a_replaceCompass);
 
 		// 从全局设置读取单位，可安全重复调用。
-		void SetUnits()
-		{
-			Invoke("SetUnits", settings::display::useMetricUnits);
-		}
+		void SetUnits();
+
+		// 整体缩放（已废弃，保留封装供回退）：ApplyAllSettings 改调下面两个分量接口。
+		void SetMarkerTextScale(float a_scale);
+
+		void SetMarkerNameScale(float a_scale);
+
+		void SetMarkerDistanceScale(float a_scale);
 
 		void SetFocusedMarkerInfo(const std::string_view& a_targetText, float a_distance,
-								  float a_heightDifference, std::uint32_t a_markerIndex)
-		{
-			Invoke("SetFocusedMarkerInfo", a_targetText.data(), a_distance, a_heightDifference,
-										   a_markerIndex);
-		}
+								  float a_heightDifference, std::uint32_t a_markerIndex);
 
-		IUI::GFxDisplayObject GetFocusedMarkerTargetTextField()
-		{
-			IUI::GFxDisplayObject focusedMarkerInfo{ GetMember("FocusedMarkerInfo") };
-			IUI::GFxDisplayObject target{ focusedMarkerInfo.GetMember("Target") };
-			return target.GetMember("TextFieldInstance");
-		}
+		IUI::GFxDisplayObject GetFocusedMarkerTargetTextField();
 
-		void FocusMarker()
-		{
-			Invoke("FocusMarker");
-		}
+		void FocusMarker();
 
-		void UnfocusMarker()
-		{
-			Invoke("UnfocusMarker");
-		}
+		void UnfocusMarker();
 
-		void UpdateFocusedMarker()
-		{
-			Invoke("UpdateFocusedMarker");
-		}
+		void UpdateFocusedMarker();
 
 		// 未知地点图标由 HUDMarkerManager::ProcessLocationMarker 直接更新。
 

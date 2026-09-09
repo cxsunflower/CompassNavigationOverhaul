@@ -1,10 +1,8 @@
 #include "Hooks.h"
 #include "Settings.h"
+#include "MessageListeners.h"
 
 #include "utils/Logger.h"
-
-extern const SKSE::LoadInterface* skse;
-void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg);
 
 SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 {
