@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <cmath>
 #include <numbers>
 
 namespace util
@@ -87,5 +89,34 @@ namespace util
 		RE::NiPoint3 markerPos = GetRealPosition(a_marker);
 
 		return markerPos.z - playerPos.z;
+	}
+
+	// 3D 视线夹角（度）：从 a_from 沿单位向量 a_forward 看向 a_target 的夹角。
+	// 点与相机重合（距离约 0）时返回 180 度，即视为“没看向”。
+	inline float GetGazeAngleBetween(const RE::NiPoint3& a_forward, const RE::NiPoint3& a_from,
+		const RE::NiPoint3& a_target)
+	{
+		const float dx = a_target.x - a_from.x;
+		const float dy = a_target.y - a_from.y;
+		const float dz = a_target.z - a_from.z;
+		const float length = std::sqrt(dx * dx + dy * dy + dz * dz);
+
+		if (length <= 0.0001F)
+		{
+			return 180.0F;
+		}
+
+		float cosAngle = (a_forward.x * dx + a_forward.y * dy + a_forward.z * dz) / length;
+		cosAngle = std::max(-1.0F, std::min(1.0F, cosAngle));
+
+		return RadiansToDegrees(std::acos(cosAngle));
+	}
+
+	// 视线俯角（度）：正数=往下看，负数=往上看。a_forward 应为单位向量。
+	inline float GetDepressionAngle(const RE::NiPoint3& a_forward)
+	{
+		const float sinAngle = std::max(-1.0F, std::min(1.0F, -a_forward.z));
+
+		return RadiansToDegrees(std::asin(sinAngle));
 	}
 }
