@@ -2,195 +2,59 @@
 
 #include "IUI/GFxArray.h"
 #include "IUI/GFxDisplayObject.h"
+#include "IUI/GFxObject.h"
 
 #include "RE/G/GFxMovieDef.h"
 
 #include "Settings.h"
-
-struct QuestItem
-{
-	QuestItem() = default;
-
-	QuestItem(RE::TESObjectREFR* a_markerRef, RE::QUEST_DATA::Type a_questType, const std::string& a_questName,
-			  bool a_isInSameLocation, int a_questAgeIndex)
-	: markerRef{ a_markerRef }, type{ a_questType }, name{ a_questName }, isInSameLocation{ a_isInSameLocation },
-	  ageIndex{ a_questAgeIndex }
-	{}
-
-	RE::TESObjectREFR* markerRef;
-	RE::QUEST_DATA::Type type;
-	std::string name;
-	bool isInSameLocation;
-	std::vector<RE::BGSInstancedQuestObjective*> objectives;
-	int ageIndex;
-};
+#include "questlist/QuestData.h"
 
 class QuestItemList : public IUI::GFxDisplayObject
 {
 public:
-	// VR 中直挂 HUDMovieBaseInstance 会在 Infinity UI 遍历成员表时崩溃，因此与 Compass
-	// 一样挂到 CompassShoutMeterHolder；补丁资源路径必须与该层级一致。
-	static constexpr inline std::string_view path = "_level0.HUDMovieBaseInstance.CompassShoutMeterHolder.QuestItemList";
+	// Attach inside Compass so VR scene-node movement includes the quest details.
+	static constexpr inline std::string_view path = "_level0.HUDMovieBaseInstance.CompassShoutMeterHolder.Compass.FocusedMarkerInfo.Target.QuestItemList";
 
-	static void InitSingleton(const GFxDisplayObject& a_questItemList)
-	{
-		if (!singleton)
-		{
-			static QuestItemList singletonInstance{ a_questItemList };
-			singleton = &singletonInstance;
-		}
-	}
+	static void InitSingleton(const GFxDisplayObject& a_questItemList);
+	static void ResetSingleton();
 
 	static QuestItemList* GetSingleton() { return singleton; }
 
-	bool CanBeDisplayed(RE::TESObjectCELL* a_cell, bool a_isPlayerWeaponDrawn) const
-	{
-		if (!a_isPlayerWeaponDrawn || !settings::questlist::hideInCombat)
-		{
-			if (a_cell)
-			{
-				if ((a_cell->IsInteriorCell() && settings::questlist::showInInteriors) ||
-					(a_cell->IsExteriorCell() && settings::questlist::showInExteriors))
-				{
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
+	bool CanBeDisplayed(RE::TESObjectCELL* a_cell, bool a_isPlayerWeaponDrawn) const;
 
 	void SetHiddenByForce(bool a_hiddenByForce) { hiddenByForce = a_hiddenByForce; }
 
 	bool IsHiddenByForce() const { return hiddenByForce; }
 
-	// positionX/Y 是影片比例坐标；减去舞台原点可转换为父影片剪辑的局部坐标。
-	void UpdateLayout()
-	{
-		RE::GFxValue::DisplayInfo displayInfo;
+	// Position belongs to the compass anchor, including after settings reloads.
+	void UpdateLayout();
 
-		GetDisplayInfo(&displayInfo);
+	void AnchorBelow(IUI::GFxDisplayObject a_anchorTextField, float a_gap = 6.0F);
 
-		RE::GFxMovieDef* movieDef = GetMovieView()->GetMovieDef();
+	void SetTextScale(float a_scale);
 
-		displayInfo.SetX(movieDef->GetWidth() * settings::questlist::positionX - originX);
-		displayInfo.SetY(movieDef->GetHeight() * settings::questlist::positionY - originY);
+	void AddToHudElements();
 
-		SetDisplayInfo(displayInfo);
-	}
+	void AddQuest(const QuestItem& a_questItem);
 
-	// Keep the quest list attached directly below the focused quest name.
-	void AnchorBelow(IUI::GFxDisplayObject a_anchorTextField, float a_gap = 6.0F)
-	{
-		RE::GPointF anchor = a_anchorTextField.LocalToGlobal();
+	void SetQuestSide(const std::string& a_sideName);
 
-		const RE::GFxValue anchorWidthValue = a_anchorTextField.GetMember("_width");
-		const RE::GFxValue anchorHeightValue = a_anchorTextField.GetMember("_height");
-		const float anchorWidth = anchorWidthValue.IsNumber() ? static_cast<float>(anchorWidthValue.GetNumber()) : 0.0F;
-		const float anchorHeight = anchorHeightValue.IsNumber() ? static_cast<float>(anchorHeightValue.GetNumber()) : 0.0F;
+	// Reconcile live rows by stable quest/instance keys without restarting fades.
+	void SyncQuests(const std::vector<QuestItem>& a_quests);
 
-		anchor.x += anchorWidth * 0.5F;
-		anchor.y += anchorHeight + a_gap;
+	void Update();
 
-		const RE::GFxValue parentValue = GetMember("_parent");
-		if (!parentValue.IsDisplayObject())
-		{
-			return;
-		}
+	void ShowAllQuests();
 
-		IUI::GFxDisplayObject parent{ parentValue };
-		IUI::GFxObject point{ GetMovieView() };
-		RE::GFxValue x = anchor.x;
-		RE::GFxValue y = anchor.y;
-		point.SetMember("x", x);
-		point.SetMember("y", y);
-		parent.Invoke("globalToLocal", point);
-
-		const RE::GFxValue localXValue = point.GetMember("x");
-		const RE::GFxValue localYValue = point.GetMember("y");
-		if (!localXValue.IsNumber() || !localYValue.IsNumber())
-		{
-			return;
-		}
-
-		const RE::GFxValue listWidthValue = GetMember("_width");
-		const float listWidth = listWidthValue.IsNumber() ? static_cast<float>(listWidthValue.GetNumber()) : 0.0F;
-
-		RE::GFxValue::DisplayInfo displayInfo;
-		GetDisplayInfo(&displayInfo);
-		displayInfo.SetX(localXValue.GetNumber() - listWidth * 0.5F);
-		displayInfo.SetY(localYValue.GetNumber());
-		SetDisplayInfo(displayInfo);
-	}
-
-	// 将最大高度同步到 ActionScript。
-	void SetMaxHeight(float a_maxHeight)
-	{
-		Invoke("SetMaxHeight", a_maxHeight);
-	}
-
-	void SetTextScale(float a_scale)
-	{
-		Invoke("SetTextScale", a_scale);
-	}
-
-	void AddToHudElements()
-	{
-		Invoke("AddToHudElements");
-	}
-
-	void AddQuest(const QuestItem& a_questItem)
-	{
-		GFxArray gfxQuestObjectives{ GetMovieView() };
-
-		for (const RE::BGSInstancedQuestObjective* questObjective : a_questItem.objectives)
-		{
-			gfxQuestObjectives.PushBack(questObjective->GetDisplayTextWithReplacedTags().c_str());
-		}
-
-		Invoke("AddQuest", a_questItem.type, a_questItem.name.c_str(), a_questItem.isInSameLocation,
-			   gfxQuestObjectives, a_questItem.ageIndex);
-
-	}
-
-	void SetQuestSide(const std::string& a_sideName)
-	{
-		Invoke("SetQuestSide", a_sideName.c_str());
-	}
-
-	void Update()
-	{
-		Invoke("Update");
-	}
-
-	void ShowAllQuests()
-	{
-		Invoke("ShowAllQuests");
-	}
-
-	void RemoveAllQuests()
-	{
-		Invoke("RemoveAllQuests");
-	}
+	void RemoveAllQuests();
 
 private:
 
 	// 零参数初始化 AS 实例，并保存舞台原点供 UpdateLayout 使用。
-	QuestItemList(const GFxDisplayObject& a_questItemList) :
-		GFxDisplayObject{ a_questItemList }
-	{
-		if (HasMember("QuestItemList"))
-		{
-			Invoke("QuestItemList");
-
-			RE::GPointF origin = LocalToGlobal();
-
-			originX = origin.x;
-			originY = origin.y;
-		}
-	}
+	QuestItemList(const GFxDisplayObject& a_questItemList);
 
 	static inline QuestItemList* singleton = nullptr;
+	static inline std::unique_ptr<QuestItemList> owner;
 
 	// 成员顺序必须与 DLL 中的布局一致（GFxValue 占 0x00-0x17）：
 	//   originX @0x18、originY @0x1c、hiddenByForce @0x20。
@@ -198,4 +62,8 @@ private:
 	float originY = 0.0F;
 
 	bool hiddenByForce = false;
+
+	// Keep the original GFx-related members and offsets unchanged.
+	bool hasQuestSnapshot = false;
+	std::string lastQuestSignature;
 };
