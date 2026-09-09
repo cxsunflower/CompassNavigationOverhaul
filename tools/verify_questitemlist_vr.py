@@ -13,7 +13,7 @@
 
 用法：
     python3 tools/verify_questitemlist_vr.py \
-        tools/QuestItemList.HUDMenu-original.swf \
+        assets/source/questlist/QuestItemList.HUDMenu-original.swf \
         build/QuestItemList.VR-patched.swf
 退出码 0 = 通过。
 """
