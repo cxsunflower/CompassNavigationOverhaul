@@ -23,6 +23,17 @@ namespace settings
 	namespace debug
 	{
 		inline logger::level logLevel = logger::level::info;
+        inline bool calibrateQuestList = false;
+        inline std::uint32_t calibrationAxis = 0;
+        inline float calibrationStart = 700.0F;
+        inline float calibrationStep = 40.0F;
+        inline float calibrationCross = 512.0F;
+
+		inline bool IsDebugEnabled()
+		{
+			return logLevel <= logger::level::debug;
+		}
+
 
 		inline logger::level EffectiveLogLevel()
 		{
@@ -33,7 +44,10 @@ namespace settings
 	namespace display
 	{
 		inline bool useMetricUnits = true;
+		// 整体缩放（已废弃：保留解析，C++ 不再应用；用下面两个分量代替）。
 		inline float markerTextScale = 100.0F;
+		inline float markerNameScale = 100.0F;
+		inline float markerDistanceScale = 100.0F;
 
 		inline UndiscoveredLocationMarkers undiscoveredLocationMarkers = UndiscoveredLocationMarkers::kHidden;
 
@@ -57,16 +71,34 @@ namespace settings
 
 	namespace questlist
 	{
+		// Legacy position keys are read for compatibility only.
+		inline float offsetX = 0.0F;
+		inline float offsetY = 0.0F;
 		inline float positionX = 0.008F;
 		inline float positionY = 0.125F;
 		inline float textScale = 100.0F;
-
-		inline float maxHeight = 0.675F;
 
 		inline bool showInExteriors = true;
 		inline bool showInInteriors = true;
 
 		inline bool hideInCombat = false;
+
+		// 罗盘注视门控：任务列表要求“罗盘显示中 + 3D 视线看向罗盘”。
+		inline bool requireLookingAtCompass = true;
+		inline bool requireCompassVisible = true;
+
+		// 0=俯角兜底，1=右手节点，2=罗盘节点；高档缺失时自动降级。
+		inline std::uint32_t compassGazeMode = 2;
+
+		inline float compassGazeAngleToShow = 15.0F;
+		inline float compassGazeAngleToKeep = 25.0F;
+		inline float compassMaxDistance = 90.0F;  // 游戏单位，约 70 单位=1 米
+
+		inline float compassGazePitchToShow = 18.0F;
+		inline float compassGazePitchToKeep = 10.0F;
+
+		// true=Palm Compass VR（低头看手掌），false=罗盘在视线上方（抬头看）。
+		inline bool compassOnPalm = true;
 	}
 
 	// 按完整的“键名:分区”分发设置。
