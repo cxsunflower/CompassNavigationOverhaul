@@ -39,8 +39,7 @@ function GetClipDiagnostics():String
             ",headerHeight=" + entries[i].Title.layoutHeight + ",bodyHeight=" + entries[i].DetailBody.layoutHeight +
             ",bodyWidth=" + entries[i].DetailBody.layoutWidth + ",omitted=" + entries[i].HasOmittedContent() +
             "]" + entries[i].GetRowClipState(_root);
-    state += "; omissionVisible=" + (overflowLabel != undefined && overflowLabel._visible) +
-        "; layoutDebug=" + layoutDebugEnabled + "; debugState=[" + GetLayoutDebugState() + "]";
+    state += "; omissionVisible=" + (overflowLabel != undefined && overflowLabel._visible);
     return state;
 }
 

@@ -136,11 +136,11 @@ def main():
         assert '_parent.TextFieldInstance' in timeline
         assert 'function GetAnchorState(' in timeline
         assert 'function GetLayoutSnapshot(' in timeline
-        assert 'function SetLayoutDebug(' in timeline
-        assert 'function UpdateLayoutDebug(' in timeline
-        assert 'function GetLayoutDebugGeometry(' in timeline
-        assert 'function GetLayoutDebugData(' in timeline
-        assert '_root.createEmptyMovieClip("QuestListLayoutDebugOverlay"' in timeline
+        assert 'function GetDebugObservation(' in timeline
+        assert 'function GetDebugDetails(' in timeline
+        assert 'function SetCalibration(' in timeline
+        assert 'SetLayoutDebug' not in timeline
+        assert 'QuestListLayoutDebugOverlay' not in timeline
         assert 'function GetFullBoundsInRoot(' in timeline
         assert 'function GetFitGeometry(' in timeline
         assert 'function GetVisibleBottomInRoot(' in timeline
@@ -160,7 +160,7 @@ def main():
         assert 'function ResizeObjectivesHeader(' in item
         assert 'function LayoutDetailBox(' in item
         assert 'function GetDetailBoxBounds(' in item
-        assert 'function GetLayoutDebugRegions(' in item
+        assert 'function GetDiagnosticRegions(' in item
         assert 'function GetRenderedBottomInSpace(' in item
         assert 'function GetHeaderBottomInSpace(' in item
         assert 'function GetVisibleContentBottom(' in item

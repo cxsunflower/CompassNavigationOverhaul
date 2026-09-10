@@ -4,6 +4,7 @@
 #include "Compass.h"
 #include "QuestItemList.h"
 #include "utils/Logger.h"
+#include <chrono>
 
 namespace CNO::UI
 {
@@ -11,16 +12,6 @@ void ApplyQuestListSettings(QuestItemList& a_list)
 {
 	a_list.UpdateLayout();
 	a_list.SetTextScale(settings::questlist::textScale);
-	const bool enabled = settings::debug::IsDebugEnabled();
-	const bool available = a_list.HasMember("SetLayoutDebug");
-	if (available)
-	{
-		a_list.Invoke("SetLayoutDebug", enabled);
-	}
-	const std::string debugState = a_list.HasMember("GetLayoutDebugState") ?
-		a_list.Invoke("GetLayoutDebugState").ToString().c_str() : "unavailable";
-	logger::info("[QuestListDebug] level={} requested={} method={} state={}",
-		static_cast<std::uint32_t>(settings::debug::logLevel), enabled, available, debugState);
     if (a_list.HasMember("SetCalibration"))
     {
         a_list.Invoke("SetCalibration", settings::debug::calibrateQuestList,
@@ -33,6 +24,38 @@ void ApplyQuestListSettings(QuestItemList& a_list)
 		"GetLayoutSnapshot" : "GetAnchorState");
 	logger::info("[QuestListLayout] panel={} {}", settings::questlist::textScale,
 		state.ToString().c_str());
+}
+
+// Executed only on the existing Compass UI update/settings path. GFx values
+// never leave that thread or survive a movie lifetime. AS2 owns bounded snapshots.
+void PollDebugOverlay(bool a_snapshot)
+{
+    static auto last = std::chrono::steady_clock::time_point{};
+    static bool requested = false;
+    const bool enabled = settings::debug::IsDebugEnabled();
+    if (!enabled && !requested && !a_snapshot) return;
+    const auto now = std::chrono::steady_clock::now();
+    if (!a_snapshot && enabled == requested && now-last < std::chrono::milliseconds(100)) return;
+    last = now;
+    auto compass = CNO::Compass::GetSingleton();
+    if (!compass) return;
+    if (!compass->HasMember("SetDebugOverlay"))
+    {
+        if (a_snapshot || enabled != requested) logger::warn("[HUDDebug] observer SWF missing; no legacy overlay fallback");
+        requested = enabled;
+        return;
+    }
+    compass->Invoke("SetDebugOverlay", enabled, settings::debug::calibrateQuestList, a_snapshot);
+    if (requested && !enabled) logger::info("[HUDDebug] disabled");
+    requested = enabled;
+    if (!enabled || !compass->HasMember("DrainDebugLog")) return;
+    const std::string snapshot = compass->Invoke("DrainDebugLog").ToString().c_str();
+    if (!snapshot.empty())
+    {
+        constexpr std::size_t limit = 524288;
+        logger::info("[HUDDebug] {}{}", snapshot.substr(0,limit),
+            snapshot.size() > limit ? "\n[native transport truncated at 512 KiB]" : "");
+    }
 }
 
 void ApplyAllSettings()
@@ -60,6 +83,7 @@ void ApplyAllSettings()
 	{
 		ApplyQuestListSettings(*questItemList);
 	}
+	PollDebugOverlay(true);
 }
 
 	namespace

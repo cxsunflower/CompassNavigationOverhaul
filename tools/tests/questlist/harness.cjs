@@ -241,7 +241,7 @@ function assertDetailInsideOrnament(q) {
       effectiveScale:110,effectiveWidth:1,fitGeometry:'',fitReason:'not fitted',fitOverflow:false,
       omissionReason:'none',omissionLimit:0,lastSafeLimit:0,lastVisibleBottom:0,
       calibrationEnabled:false,calibrationAxis:0,calibrationStart:700,calibrationStep:40,calibrationCross:512,calibrationOverlay:undefined,
-      layoutDebugEnabled:false,dedicatedPanel:false,layoutDebugOverlay:undefined,layoutDebugKey:'',layoutDebugLabelCount:0,
+      dedicatedPanel:false,
       compassPassengerMode:false,compassPassengerConfig:{width:320,height:220,offsetX:40,offsetY:40,scale:110,minScale:90},
       Math,Number,String,isNaN,isFinite});
     const configMatch=timeline.match(/(?:var\s+)?compassPassengerConfig\s*=\s*(\{[^}]+\})/);
@@ -254,7 +254,7 @@ function assertDetailInsideOrnament(q) {
       for(;depth&&end<timeline.length;end++) {if(timeline[end]==='{')depth++;if(timeline[end]==='}')depth--;}
       vm.runInContext(timeline.slice(start,end),ctx);
     }
-    if(process.env.CNO_TRACE)for(const name of ['FitLayout','GetLayoutDebugData','GetLayoutDebugRootViewport','DrawLayoutDebugRegion']){
+    if(process.env.CNO_TRACE)for(const name of ['FitLayout','GetDebugObservation']){
       const original=list[name];
       if(typeof original==='function')list[name]=function(...args){console.log('TRACE begin',name,args[0]&&args[0].name,args[0]&&args[0].bounds);const result=original.apply(this,args);console.log('TRACE end',name,result&&result.bounds,result&&result.signature&&result.signature.length);return result;};
     }

@@ -118,7 +118,6 @@ QuestItemList::QuestItemList(const GFxDisplayObject& a_questItemList) :
 		if (HasMember("QuestItemList"))
 		{
 			Invoke("QuestItemList");
-			Invoke("SetLayoutDebug", settings::debug::IsDebugEnabled());
 
 			RE::GPointF origin = LocalToGlobal();
 

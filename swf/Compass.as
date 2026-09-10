@@ -225,6 +225,8 @@ function SetMarkers():Void
 	}
 }
 
+// @include "compass/Debug.as"
+
 // 旧基底主时间轴三语句（2.12.0 基底重编时从旧二进制补回）：
 // gfxExtensions 开关 Scaleform 扩展 API；HeightIndicator 默认帧；stop 防止主时间轴（共 2 帧）走帧。
 _global.gfxExtensions = true;

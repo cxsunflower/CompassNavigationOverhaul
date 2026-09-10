@@ -7,5 +7,6 @@ namespace CNO::UI
 	// Shared by embedded initialization, compatibility patches and INI reloads.
 	void ApplyQuestListSettings(QuestItemList& a_list);
 	void ApplyAllSettings();
+	void PollDebugOverlay(bool a_snapshot = false);
 	void RegisterINIReloadSink();
 }

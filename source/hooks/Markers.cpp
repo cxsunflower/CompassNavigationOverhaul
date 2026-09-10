@@ -1,6 +1,7 @@
 #include "Internal.h"
 
 #include "Settings.h"
+#include "../ui/SettingsLifecycle.h"
 
 #include "HUDMarkerManager.h"
 
@@ -103,6 +104,7 @@ namespace hooks
 		hooks::Compass::Update(a_compass);
 
 		CNO::HUDMarkerManager::GetSingleton()->SetMarkersExtraInfo();
+		CNO::UI::PollDebugOverlay();
 	}
 
 }

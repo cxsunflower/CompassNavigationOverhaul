@@ -239,7 +239,7 @@ test('passenger stays inside the sampled continuous band without crossing its up
   list._parent._y=706.45;
   field._x=-949.45;field._y=9.5;field._width=1898.85;field._height=35.55;
   q.SetQuestInfo(1,'Title','Long description '.repeat(6),true,[pending,completed,failed],0);
-  list.Update();list.SetLayoutDebug(true);
+  list.Update();
   near(list.GetSharedHudSafeTop(),760);
   near(list.GetSharedHudSafeBottom(),960);
   const bounds=list.GetViewportBounds();
@@ -251,10 +251,7 @@ test('passenger stays inside the sampled continuous band without crossing its up
   assert.ok(list.effectiveScale>=90);
   assert.ok(list.viewportMask.getBounds(list._root).yMax<=960.001);
   assert.ok(list.viewportMask.getBounds(list._root).yMin>=759.999);
-  const viewport=list.GetLayoutDebugRootViewport();
-  assert.ok(viewport.bounds.yMax<=960.001);
-  for(const cmd of list.layoutDebugOverlay.Lines.commands)
-    if(cmd.op==='line'||cmd.op==='move')assert.ok(cmd.y>=759.999 && cmd.y<=960.001);
+  assert.deepEqual(list.GetDebugObservation().viewport,bounds);
   for(const row of q.ObjectiveItemList)
     if(row._visible)assert.ok(row.getBounds(list._root).yMax<=960.001);
   list.SetOffsets(100,100);list.Update();

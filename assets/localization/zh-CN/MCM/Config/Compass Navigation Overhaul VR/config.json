@@ -355,7 +355,7 @@
 				{
 					"id": "uLogLevel:Debug",
 					"text": "日志级别",
-					"help": "设置日志的详细程度，级别越低记录越多。Trace 和 Debug 同时显示任务列表布局调试框、坐标与尺寸。\n默认：Info",
+					"help": "Trace 和 Debug 开启全部 HUD 诊断边框、简短状态和详细日志；Info 及以上关闭普通 HUD 诊断。边界校准仍独立控制。\n默认：Info",
 					"type": "stepper",
 					"valueOptions": {
 						"options": [ "Trace 追踪", "Debug 调试", "Info 信息", "Warning 警告", "Error 错误", "Critical 严重错误" ],

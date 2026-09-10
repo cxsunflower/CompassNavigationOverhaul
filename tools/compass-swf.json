@@ -1,8 +1,9 @@
 {
-  "swf/Compass.as": "63e6de529822c50c893577d1c2a2ecfb867313f09126021517c0493ad2101e8d",
-  "swf/CompassMarkerInfo.as": "133200d53a3f46036096c73f8793a75c9756ea68cb65961e8a3e72608a074b61",
+  "swf/Compass.as": "d00fa2e8d948a774a8cb02de61460f2c45b94076c9ae4537ace70ac44a58e7aa",
+  "swf/CompassMarkerInfo.as": "2f694fe1da3ccc8ff7b5cd07bc49eaf629e41f8c4b7b29d075aba6a955325cc0",
+  "swf/compass/Debug.as": "78462b96a3607f92ee5ab09c68588e54fa1b61acf89de3e45ce5aee11f7e5bd3",
   "swf/utils.as": "8c58b07ad84058d7f95dd7e38a29f7d038cde957161013e68e89de694620c76b",
-  "tools/build_compass_swf.py": "a83089848122f2ee3d7b94795d6870cb5bd2fcf66a3fac3715bc7ee45608928d",
-  "tools/build_questlist_swf.py": "359ef3cef8e0250ab77a3fd6edc4be7154e79f58d57fb035f0f5975c8283c844",
-  "assets/generated/Compass.before-embedded.swf": "1c91834a9828d7ee3a5d26a3a1eefc5112e3a357812247201890786e2e0a5b14"
+  "tools/build_compass_swf.py": "2835cf57fbd37088ee2e06e1c0293264433189fdefdb3f61fa2f343b18ef8f32",
+  "tools/build_questlist_swf.py": "4937d7379d6cee8f6f0112a34e6858c4d8b7d946326a47f6a6abd8c6d6687907",
+  "assets/generated/Compass.before-embedded.swf": "1697c891ac496c5126c02a6663807600e8b50cf7de13ecd166dc8612b9cd9c13"
 }

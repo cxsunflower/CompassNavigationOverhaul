@@ -34,20 +34,20 @@ class SourceModulesTests(unittest.TestCase):
     def test_real_source_inventory_and_public_contract(self):
         sources = compose_all(ROOT)
         self.assertEqual(tuple(sources), ENTRYPOINTS)
-        self.assertEqual(sum(len(deps) - 1 for _, deps in sources.values()), 13)
+        self.assertEqual(sum(len(deps) - 1 for _, deps in sources.values()), 14)
         timeline = sources["swf/QuestItemList.as"][0]
         item = sources["swf/QuestItem.as"][0]
         # Includes the Passenger geometry and bounded diagnostic helpers.
-        self.assertEqual(len(re.findall(r"(?m)^\s*(?:(?:public|private|static)\s+)*function\s+\w+\s*\(", timeline)), 61)
+        self.assertEqual(len(re.findall(r"(?m)^\s*(?:(?:public|private|static)\s+)*function\s+\w+\s*\(", timeline)), 48)
         self.assertEqual(len(re.findall(r"(?m)^\s*(?:(?:public|private|static)\s+)*function\s+\w+\s*\(", item)), 31)
         self.assertRegex(timeline, r"stop\(\);\s*$")
         self.assertEqual(timeline.count("_global.gfxExtensions = true;"), 1)
         self.assertEqual(item.count("class QuestItem extends MovieClip"), 1)
         self.assertIn("function AddQuest(a_type:Number, a_title:String, a_description:String, a_isInSameLocation:Boolean, a_objectives:Array, a_ageIndex:Number)", timeline)
         self.assertIn("function SetQuestInfo(a_type:Number, a_title:String, a_description:String, a_isInSameLocation:Boolean, a_objectives:Array, a_ageIndex:Number)", item)
-        for name in ("SetPanelSurface", "SetAnchor", "UpdateAnchor", "SetOffsets", "SetTextScale", "SyncQuests", "GetLayoutSnapshot", "SetLayoutDebug", "GetLayoutDebugVisibility", "GetLayoutDebugState", "Update", "onEnterFrame", "onUnload"):
+        for name in ("SetPanelSurface", "SetAnchor", "UpdateAnchor", "SetOffsets", "SetTextScale", "SyncQuests", "GetLayoutSnapshot", "GetDebugObservation", "GetDebugDetails", "SetCalibration", "Update", "onEnterFrame", "onUnload"):
             self.assertIn("function " + name + "(", timeline)
-        for name in ("GetContentBounds", "ApplyHeightLimit", "ReflowWidth", "GetLayoutDebugRegions", "SetSide", "Show", "Remove"):
+        for name in ("GetContentBounds", "ApplyHeightLimit", "ReflowWidth", "GetDiagnosticRegions", "SetSide", "Show", "Remove"):
             self.assertIn("function " + name + "(", item)
         self.assertNotIn("SetMaxHeight", timeline + item)
 

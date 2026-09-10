@@ -3,7 +3,7 @@
 	// Diagnostic-only geometry. Every rectangle is expressed in its own clip's
 	// local coordinates; the caller transforms all four corners to root space.
 	// Never use this list, its labels or rendered debug bounds for layout.
-	public function GetLayoutDebugRegions():Array
+	public function GetDiagnosticRegions():Array
 	{
 		var regions:Array = new Array();
 		if (this.naturalLayout == undefined) return regions;

@@ -31,7 +31,6 @@ var omissionReason:String = "none";
 var omissionLimit:Number = 0;
 var lastSafeLimit:Number = 0;
 var lastVisibleBottom:Number = 0;
-var layoutDebugEnabled:Boolean = false;
 var calibrationEnabled:Boolean = false;
 var calibrationAxis:Number = 0;
 var calibrationStart:Number = 700;
@@ -58,9 +57,6 @@ function GetCompassPassengerConfig():Object
 {
     return compassPassengerConfig;
 }
-var layoutDebugOverlay:MovieClip;
-var layoutDebugKey:String = "";
-var layoutDebugLabelCount:Number = 0;
 
 // Called without arguments by the native plugin; layout is applied separately.
 
@@ -75,5 +71,7 @@ var layoutDebugLabelCount:Number = 0;
 // @include "list/Diagnostics.as"
 
 // @include "list/Debug.as"
+
+// @include "list/Calibration.as"
 
 stop();

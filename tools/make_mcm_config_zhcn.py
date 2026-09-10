@@ -107,8 +107,8 @@ RULES += [
 # 调试页；保留英文级别名以便与日志对照。
 RULES += [
     ('"text": "Log Level",', '"text": "日志级别",', 1),
-    ('"help": "Sets the level of detail in the log. Trace and Debug also show the QuestList layout overlay with bounds, coordinates and sizes.\\nDefault: Info",',
-     '"help": "设置日志的详细程度，级别越低记录越多。Trace 和 Debug 同时显示任务列表布局调试框、坐标与尺寸。\\n默认：Info",', 1),
+    ('"help": "Trace and Debug enable all HUD diagnostic outlines, short status text and detailed logs. Info and higher disable the HUD diagnostics. Boundary calibration remains separate.\\nDefault: Info",',
+     '"help": "Trace 和 Debug 开启全部 HUD 诊断边框、简短状态和详细日志；Info 及以上关闭普通 HUD 诊断。边界校准仍独立控制。\\n默认：Info",', 1),
     ('"options": [ "Trace", "Debug", "Info", "Warning", "Error", "Critical Error" ],',
      '"options": [ "Trace 追踪", "Debug 调试", "Info 信息", "Warning 警告", "Error 错误", "Critical 严重错误" ],', 1),
 ]

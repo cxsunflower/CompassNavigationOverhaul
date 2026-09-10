@@ -143,5 +143,4 @@ function Update():Void
         _alpha = 100;
     }
     else _alpha = 0;
-    if (layoutDebugEnabled) UpdateLayoutDebug();
 }

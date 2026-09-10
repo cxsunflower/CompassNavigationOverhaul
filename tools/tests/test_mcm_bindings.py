@@ -75,39 +75,27 @@ class BindingsTests(unittest.TestCase):
                 self.assertEqual(item["valueOptions"]["sourceType"], "ModSettingBool")
                 self.assertIn("Default: Enabled" if language == "en" else "默认：开启", item["help"])
 
-    def test_layout_debug_follows_log_level_only(self):
+    def test_all_hud_diagnostics_follow_mcm_log_level(self):
         for path in (v.MCM_ASSET_DIR / "settings.ini", ROOT / "assets/main/SKSE/Plugins/CompassNavigationOverhaulVR.ini"):
             ini = configparser.ConfigParser(interpolation=None)
             ini.read(path, encoding="utf-8-sig")
             self.assertEqual(ini.getint("Debug", "uLogLevel"), 2)
-            self.assertNotIn("bshowquestlistlayout", ini["Debug"])
+            self.assertNotIn("bdebugoverlay", ini["Debug"])
+        source = v.read_settings_bindings()
+        self.assertNotIn("bDebugOverlay", source)
         header = (ROOT / "include/Settings.h").read_text(encoding="utf-8-sig")
         self.assertIn("return logLevel <= logger::level::debug;", header)
-        self.assertNotIn("showQuestListLayout", header)
-        source = v.read_settings_bindings()
-        self.assertIn('MakeSetting("uLogLevel:Debug", static_cast<std::uint32_t>(logLevel))', source)
-        self.assertNotIn("bShowQuestListLayout", source)
+        self.assertNotIn("inline bool overlay", header)
         lifecycle = (ROOT / "source/ui/SettingsLifecycle.cpp").read_text(encoding="utf-8-sig")
-        bridge = (ROOT / "source/questlist/Bridge.cpp").read_text(encoding="utf-8-sig")
-        infinity = (ROOT / "source/ui/InfinityUI.cpp").read_text(encoding="utf-8-sig")
         self.assertIn('const bool enabled = settings::debug::IsDebugEnabled();', lifecycle)
-        self.assertIn('a_list.Invoke("SetLayoutDebug", enabled);', lifecycle)
-        self.assertIn('Invoke("SetLayoutDebug", settings::debug::IsDebugEnabled());', bridge)
-        self.assertIn('ApplyQuestListSettings(*questItemList);', lifecycle)
-        self.assertEqual(infinity.count('CNO::UI::ApplyQuestListSettings('), 2)
-        embedded = infinity.split('QuestItemList::InitSingleton(embeddedList);', 1)[1].split('Embedded Compass sprite initialized', 1)[0]
-        self.assertIn('CNO::UI::ApplyQuestListSettings(*list);', embedded)
-        self.assertIn('GetLayoutDebugState', lifecycle)
-        for doc in (self.en, self.zh):
-            item = next(i for p in doc["pages"] for i in p["content"] if i.get("id") == "uLogLevel:Debug")
-            self.assertNotIn("bShowQuestListLayout", item["help"])
-        debug = (ROOT / "swf/questlist/list/Debug.as").read_text(encoding="utf-8-sig")
-        self.assertNotIn('Summary._visible = false', debug)
-        self.assertNotIn('Labels._visible = false', debug)
-        self.assertIn('layoutDebugOverlay.Labels["Region"+h].removeTextField();', debug)
-        self.assertIn('field._visible = true;', debug)
-        self.assertIn('layoutDebugOverlay._visible = true;', debug)
-        self.assertIn('if (!layoutDebugEnabled && layoutDebugOverlay != undefined)', debug)
+        self.assertIn('compass->Invoke("SetDebugOverlay", enabled, settings::debug::calibrateQuestList, a_snapshot);', lifecycle)
+        self.assertIn('PollDebugOverlay(true);', lifecycle)
+        self.assertIn('milliseconds(100)', lifecycle)
+        self.assertNotIn('SetLayoutDebug', lifecycle)
+        debug = (ROOT / "swf/compass/Debug.as").read_text(encoding="utf-8-sig")
+        self.assertIn('debugOverlay._visible = gate == "visible";', debug)
+        self.assertIn('debugQueue.length >= 12', debug)
+        self.assertNotIn('beginFill(', debug)
 
     def test_native_ini_reader_normalizes_bom_without_editing_saved_settings(self):
         helper = (ROOT / "source/utils/INIInput.cpp").read_text(encoding="utf-8-sig")
@@ -120,7 +108,7 @@ class BindingsTests(unittest.TestCase):
         self.assertIn("input.GetPath().string()", reader)
         self.assertIn("_this()->ReadAllSettings();", reader)
         self.assertIn("[Settings] effective logLevel=", loading)
-        self.assertIn("[QuestListDebug] level=", (ROOT / "source/ui/SettingsLifecycle.cpp").read_text(encoding="utf-8-sig"))
+        self.assertIn("[HUDDebug]", (ROOT / "source/ui/SettingsLifecycle.cpp").read_text(encoding="utf-8-sig"))
 
     def test_wrong_section_detected(self):
         bad = self.ini.replace("fMarkerNameScale=100\n", "")

@@ -355,7 +355,7 @@
 				{
 					"id": "uLogLevel:Debug",
 					"text": "Log Level",
-					"help": "Sets the level of detail in the log. Trace and Debug also show the QuestList layout overlay with bounds, coordinates and sizes.\nDefault: Info",
+					"help": "Trace and Debug enable all HUD diagnostic outlines, short status text and detailed logs. Info and higher disable the HUD diagnostics. Boundary calibration remains separate.\nDefault: Info",
 					"type": "stepper",
 					"valueOptions": {
 						"options": [ "Trace", "Debug", "Info", "Warning", "Error", "Critical Error" ],

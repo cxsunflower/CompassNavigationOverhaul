@@ -26,7 +26,7 @@ import xml.etree.ElementTree as ET
 from build_questlist_swf import artwork, strip_as2_types
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCES = ['swf/Compass.as', 'swf/CompassMarkerInfo.as']
+SOURCES = ['swf/Compass.as', 'swf/CompassMarkerInfo.as', 'swf/compass/Debug.as']
 TARGETS = ['assets/generated/Compass.before-embedded.swf']
 MANIFEST = ROOT / 'tools/compass-swf.json'
 INPUTS = SOURCES + ['swf/utils.as', 'tools/build_compass_swf.py', 'tools/build_questlist_swf.py']
@@ -48,8 +48,47 @@ def hashes():
     return {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in INPUTS + TARGETS}
 
 
-def prepare_timeline():
+def debug_timeline(command, baseline, work):
+    """Read authored frame labels; never infer phases from frame-number guesses."""
+    xml = work / 'debug-timeline.xml'
+    subprocess.run(command + ['-swf2xml', str(baseline), str(xml)], check=True)
+    sprite = next(t for t in ET.parse(xml).getroot().find('tags')
+                  if t.get('type') == 'DefineSpriteTag' and t.get('spriteId') == '136')
+    labels = []
+    frame = 1
+    for tag in sprite.find('subTags'):
+        if tag.get('type') == 'FrameLabelTag':
+            labels.append({'frame': frame, 'name': tag.get('name')})
+        if tag.get('type') == 'ShowFrameTag':
+            frame += 1
+    assert labels and any(label['name'] == 'IdleShow' for label in labels)
+    idle = next(label['frame'] for label in labels if label['name'] == 'IdleShow')
+    depth = next(t.get('depth') for t in sprite.find('subTags') if t.get('name') == 'Distance')
+    current = 1
+    matrix = None
+    for tag in sprite.find('subTags'):
+        if tag.get('depth') == depth and tag.find('matrix') is not None:
+            matrix = tag.find('matrix')
+        if tag.get('type') == 'ShowFrameTag':
+            if current == idle:
+                break
+            current += 1
+    assert matrix is not None
+    rest = {'x': float(matrix.get('translateX', '0'))/20,
+            'y': float(matrix.get('translateY', '0'))/20,
+            'sx': float(matrix.get('scaleX', '1')) if matrix.get('hasScale') == 'true' else 1,
+            'sy': float(matrix.get('scaleY', '1')) if matrix.get('hasScale') == 'true' else 1,
+            'r0': float(matrix.get('rotateSkew0', '0')) if matrix.get('hasRotate') == 'true' else 0,
+            'r1': float(matrix.get('rotateSkew1', '0')) if matrix.get('hasRotate') == 'true' else 0}
+    return {'labels': labels, 'distanceRest': rest, 'restFrame': idle}
+
+
+def prepare_timeline(metadata=None):
     text = (ROOT / 'swf/Compass.as').read_text(encoding='utf-8')
+    debug = (ROOT / 'swf/compass/Debug.as').read_text(encoding='utf-8')
+    debug = debug.replace('__CNO_DEBUG_TIMELINE__', re.sub(r'"([A-Za-z0-9_]+)":', r'\1:', json.dumps(metadata or {'labels': []})))
+    assert text.count('// @include "compass/Debug.as"') == 1
+    text = text.replace('// @include "compass/Debug.as"', debug)
     utils = (ROOT / 'swf/utils.as').read_text(encoding='utf-8')
     assert text.count('#include "utils.as"') == 1
     text = text.replace('#include "utils.as"', utils)
@@ -132,7 +171,7 @@ def main():
         scripts = work / 'scripts'
         timeline_target = scripts / 'frame_1/DoAction.as'
         timeline_target.parent.mkdir(parents=True, exist_ok=True)
-        timeline_target.write_text(prepare_timeline(), encoding='utf-8')
+        timeline_target.write_text(prepare_timeline(debug_timeline(command, ROOT / TARGETS[0], work)), encoding='utf-8')
         class_target = scripts / '__Packages/CompassMarkerInfo.as'
         class_target.parent.mkdir(parents=True, exist_ok=True)
         class_target.write_text(
