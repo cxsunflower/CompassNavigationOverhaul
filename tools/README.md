@@ -7,7 +7,8 @@
 
 | 脚本 | 用途 |
 |---|---|
-| `build_questlist_art.py` | 把 `assets/source/questlist/art/` 的 SVG 矢量图建成原生 SWF 符号（ID 300–305）。一般不直接调用，由下条脚本调用 |
+| `build_questlist_art.py` | 从 `journal-shapes.xml` 保留原始矢量记录，生成无脚本独立 `QuestItemListSkin.swf`，并为 QuestList 添加四个图形导入；正常由列表构建器调用 |
+| `extract_journal_art.py` | 显式从指定 Journal SWF 按状态／实例名称提取四个原始矢量，记录来源哈希；拒绝不兼容结构，不修改安装源文件 |
 | `questlist_header_layout.py` | 构建期新增Sprite 306，将原Title完整作为Header纳入DetailBox；验证原始符号及18帧动画不变，不修改原始基底 |
 | `questlist_source.py` | 组合 `swf/questlist/item/`、`list/` 下的14个源码模块，检查引用完整性、重复函数及原入口范围；可用 `--output` 导出可检查的完整源码 |
 | `build_questlist_swf.py` | 从不可变原始基底 + 两个AS2入口及其模块重建 `assets/generated/QuestItemList.swf`；`--check` 校验所有源码依赖与产物哈希一致 |
@@ -29,7 +30,7 @@ python tools/embed_questlist_compass.py --check
 
 完整步骤、反编译测试命令与部署边界见 [QuestList 当前说明](../manager/docs/quest-list.md)。逐条检查退出码，任一步失败就停止。
 当前完整层级为`DetailBox → Header / DetailBody / DetailContentMask`。构建脚本检查原版标题符号、动画、容器逻辑宽高及遮罩入口；完整布局/状态模拟需同时传入反编译的QuestItem类与时间轴脚本。包装器单元测试运行`python tools/tests/test_questlist_header_layout.py`，不能只执行单文件布局测试。
-源码编辑入口与各模块职责见[QuestList源码结构](../swf/questlist/README.md)。原两个AS2文件现在只保留类/时间轴声明、状态和模块引用；JPEXS仍只编译这两个组合后的入口，不引入新的运行时类、动画或加载边界。新增模块必须注册到入口，不能绕过构建脚本直接安装片段。
+源码编辑入口与各模块职责见[QuestList源码结构](../swf/questlist/README.md)。原两个AS2文件现在只保留类/时间轴声明、状态和模块引用；JPEXS仍只编译这两个组合后的入口，不引入新的运行时类、动画或列表加载边界；独立皮肤仅通过现有 `!assets` 机制导入四个图形符号。新增模块必须注册到入口，不能绕过构建脚本直接安装片段。
 普通诊断统一由 MCM Debug／Trace 开启、Info 及以上关闭；校准独立。唯一绘制层在 Compass，列表只提供数据；最终导出分别运行布局、观察器与距离回归。观察器测试为 `node tools/tests/compass_debug.test.cjs <QuestItem.as> <sprite511时间轴> <Compass时间轴>`，覆盖显隐、标签、限频及线段／Q／空列表反例。C++ 改动必须完整 `build.bat` 编译；构建不等于部署或 VR 验收。
 
 ## MCM 配置与 ESP
@@ -60,7 +61,7 @@ MCM 操作顺序、覆盖包说明及菜单不显示排查见 [MCM 文档](../ma
 | `tests/questlist_layout.test.cjs` | 反编译AS2回归入口；共享模拟环境与item/layout/debug三组测试在`tests/questlist/` |
 | `tests/test_questlist_source.py` | 源码组合、模块清单、原入口API与哈希覆盖回归；不修改发布文件 |
 | `tests/compass_marker_scale.test.cjs` | 反编译罗盘脚本回归测试：名称/距离缩放接口存在性与转调（Node 运行，参数为反编译 scripts 目录） |
-| `assets/source/questlist/art/` | 目标装饰 SVG 源 + 映射说明（见 [素材说明](../assets/source/questlist/art/README.md)） |
+| `assets/source/questlist/art/` | 日志矢量提取源与独立皮肤接口（旧描摹 SVG 已移除，历史在 Git）（见 [素材说明](../assets/source/questlist/art/README.md)） |
 
 INI输入兼容测试可在Visual Studio x64开发命令提示符中运行（输出只写入已忽略的build目录）：
 
@@ -73,6 +74,8 @@ build\ini-input-test\ini_input.test.exe
 这项测试针对真实Windows配置API复现首节BOM缺失，不能替代游戏内完整设置加载或VR绘制验收。修改INI读取器后还需运行MCM绑定回归、完整build.bat及发布包校验。
 
 标题装饰同时由 `build_questlist_swf.py` 从 `assets/source/questlist/art/QuestItemListArt.original.swf` 重建：恢复并保留原始素材字节（描边及背景试验均已撤回；用户确认黑区来自名称放大后的跨区域显示），两份 `QuestItemListArt.swf` 纳入同一哈希清单。原始素材不得用生成结果覆盖。
+
+独立皮肤的固定导出名、画布／中心空隙及 MO2 覆盖路径见[素材说明](../assets/source/questlist/art/README.md)。`tests/test_questlist_skin.py` 检查原始路径与颜色、无脚本依赖、等比图标槽位、导入 ID、按名称提取及不兼容结构拒绝；普通日志美化包不自动同步。发布必须同时包含两份 `QuestItemListSkin.swf`。
 
 ## 发布边界校验
 
