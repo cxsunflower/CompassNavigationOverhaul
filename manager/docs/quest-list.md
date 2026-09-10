@@ -16,7 +16,8 @@ QuestList 静态嵌入 `Compass.FocusedMarkerInfo.Target.QuestItemList`，继续
 - 原装饰决定自然内容宽度，逻辑 Box 尺寸由排版函数拥有，不从未裁切素材或 Debug 绘制反向测量。
 - **当前顺序是自然宽度 → 必要时缩小面板 → 完整段／行省略**。不再使用历史的“先扩宽正文”方案，不能把文字扩到固定装饰之外。
 - 省略标记为 `. . .`，跟随实际条目比例；不能挤掉最后一条原本可读的目标。没有足够空间时标记本身也可省略。
-- 分隔装饰黑边保留；**菱形不加粗**，沿用原 4/4/4 与 18×27。原始素材说明见[美术资源](../../assets/source/questlist/art/README.md)。
+- 目标图标与分隔装饰改用任务日志原始矢量；独立 `QuestItemListSkin.swf` 只含图形，不运行日志页面。**菱形不额外加粗**，保留 4/4/4 滤镜及 18×27 槽位；失败目标使用原生日志叉号，保持原比例与颜色。上方任务详情装饰字节不变。[皮肤接口与素材来源](../../assets/source/questlist/art/README.md)。
+- 皮肤适配包可覆盖 HUDMenu／VR_HMD_info 两个 `!assets/QuestItemListSkin.swf`，无需改 DLL 或布局；普通日志美化包不会自动同步，须提供符合固定导出名和画布尺寸的适配。
 
 ## 显示、定位与缩放
 - 当前名称／距离设置范围 25～150%；面板期望范围 25～110%，自动缩小下限为 `min(90,期望值)`。实际默认值以发布 INI 为准。
@@ -34,7 +35,7 @@ Q 仅合并可见条目和省略标记，F 表示完整内容，V 为逻辑视�
 
 ## 源码结构与编辑入口
 `swf/QuestItem.as`、`swf/QuestItemList.as` 保留原两个入口；`swf/questlist/item/` 七个模块、`list/` 七个模块共 14 个。列表 Debug 只提供数据，Calibration 独立保留校准；唯一普通观察器在 `swf/compass/Debug.as`。
-组合器检查显式 include、依赖哈希、缺失／重复／循环／越界／孤立模块和重复函数。[模块导航](../../swf/questlist/README.md)。不要维护第二份完整 AS2 或增加外部运行时 SWF。
+组合器检查显式 include、依赖哈希、缺失／重复／循环／越界／孤立模块和重复函数。[模块导航](../../swf/questlist/README.md)。不要维护第二份完整 AS2 或另载运行时列表。独立皮肤 SWF 是获准的纯图形库，通过现有 `!assets` 导入机制使用，不含脚本、字体或任务日志引用。
 
 ## SWF 构建与校验
 在项目根目录逐条执行，任何一步失败就停止。`build.bat` 不会自动重编 ActionScript。
@@ -52,7 +53,10 @@ python -X utf8 -m unittest discover -s tools/tests -p 'test_*.py'
 ```
 
 随后从最终内嵌 Compass 导出脚本，运行 `questlist_layout.test.cjs`、`compass_debug.test.cjs` 和 `compass_marker_scale.test.cjs`。观察器测试三个参数为 QuestItem 类、sprite 511 的列表时间轴、Compass 主时间轴；距离测试参数为 scripts 目录。[工具说明](../../tools/README.md)。
-只改 AS2 且 DLL 已对应当前原生源码时可用 `build.bat nobuild` 打包；C++ 改动须完整编译。发布两份内嵌 Compass，生成基底只作构建输入。
+只改 AS2 且 DLL 已对应当前原生源码时可用 `build.bat nobuild` 打包；C++ 改动须完整编译。发布两份内嵌 Compass 及配套的两份独立皮肤，不能漏装皮肤文件；生成基底只作构建输入。
+
+## 原生素材皮肤验收
+已从最终皮肤 SWF 导出矢量制作静态合成预览；不是游戏截图，不证明字体、滤镜、MO2 导入解析或 VR 渲染通过。目标行／排序、换行、缩放、省略、淡入及跟随逻辑不变。新皮肤和本轮 Compass 尚未部署；用户已授权整理并本地提交，提交记录以 Git 为准。
 
 ## 验收与历史
 本次三项 Debug 修复由最终 SWF 的新增边界用例验证；正常布局、距离动画和设置链路另跑既有回归。构建、打包、安装与 VR 必须分别记录。
