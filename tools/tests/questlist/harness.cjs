@@ -32,7 +32,7 @@ class MovieClip {
   attachMovie(name, instance) {
     if (!MovieClip.linkages.has(name)) return undefined;
     const clip = this.add(instance, new MovieClip());
-    const size = name === 'QuestObjectivesDivider' ? [2048, 63] : [80, 120];
+    const size = name === 'QuestObjectivesDivider' ? [481.25, 14.85] : [18, 27];
     clip._width = size[0]; clip._height = size[1];
     clip.linkage = name; return clip;
   }

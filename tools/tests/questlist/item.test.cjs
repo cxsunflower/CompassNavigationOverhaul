@@ -375,13 +375,28 @@ test('height fitting uses logical Box bounds, not oversized imported art',()=>{
   MovieClip.linkages=new Set();
 });
 
+test('independent skin maps failed state and preserves fixed icon slots',()=>{
+  MovieClip.linkages=new Set(['QuestObjectivesDivider','QuestObjectivePending','QuestObjectiveCompleted','QuestObjectiveFailed']);
+  const q=create('Journal details',[pending,completed,failed]);
+  for(const [i,name] of ['QuestObjectivePending','QuestObjectiveCompleted','QuestObjectiveFailed'].entries()) {
+    const icon=q.ObjectiveItemList[i].StateIcon;
+    assert.equal(icon.linkage,name);near(icon._width,18);near(icon._height,27);
+    assert.equal(icon._alpha,100);
+    assert.deepEqual(Array.from(icon.filters[0].args),[0,1,4,4,4,2,false,false]);
+  }
+  const header=q.ObjectivesHeader;
+  near(header.Art.Right.Art._x,-308.5*header.Art.Right.Mask._width/172.75);
+  near(header.Art.Left.Art._yscale,100*16/14.85);
+  MovieClip.linkages=new Set();
+});
+
 test('linked divider reflow sizes visible crops inside the fixed ornament',()=>{
   MovieClip.linkages=new Set(['QuestObjectivesDivider']);
   const q=create('Details',[pending]);q.ReflowWidth(0.75);
   const header=q.ObjectivesHeader, left=header.Art.Left, right=header.Art.Right;
   const wing=header.Label._x-6;
   near(left._xscale,100);near(right._xscale,100);
-  near(left.Art._xscale,100*wing/734);near(right.Art._xscale,100*wing/735);
+  near(left.Art._xscale,100*wing/172.75);near(right.Art._xscale,100*wing/172.75);
   near(left.Mask._width,wing);near(right.Mask._width,wing);
   near(right._x,header.Label._x+header.Label._width+6);
   assertDetailInsideOrnament(q);

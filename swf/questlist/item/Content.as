@@ -79,7 +79,7 @@
 		visibleObjectives.sort(this.CompareObjectiveState);
 		if (visibleObjectives.length > 0)
 		{
-			// The supplied divider has a blank center. Keep its aspect ratio and add
+			// The Journal-vector skin divider has a blank center. Keep its aspect ratio and add
 			// a separate localized label instead of baking English into the artwork.
 			this.ObjectivesHeader = this.DetailBody.createEmptyMovieClip("ObjectivesHeader", this.DetailBody.getNextHighestDepth());
 			this.ObjectivesHeader._x = 0;
@@ -117,19 +117,21 @@
 				var row:MovieClip = this.ObjectiveContainer.createEmptyMovieClip("objective" + j, this.ObjectiveContainer.getNextHighestDepth());
 				row._x = 0;
 				row._y = 0;
-				var iconName:String = objective.completed ? "QuestObjectiveCompleted" : "QuestObjectivePending";
+				var iconName:String = objective.failed ? "QuestObjectiveFailed" : (objective.completed ? "QuestObjectiveCompleted" : "QuestObjectivePending");
 				var icon:MovieClip = row.attachMovie(iconName, "StateIcon", row.getNextHighestDepth());
+				var skinIcon:Boolean = icon != undefined;
 				if (icon == undefined)
 				{
 					icon = this.DrawObjectiveIconFallback(row, objective.completed == true);
 				}
-				// Keep the original icon size and black outline; only the divider is strengthened.
-				// stays readable on busy backgrounds. Row text starts at x=26, so the
+				// Keep the existing 18x27 slot and 4/4/4 outline. The skin fits
+				// original vectors uniformly inside the slot; it does not stretch the failed cross. Row text starts at x=26, so the
 				// 18px-wide icon (x=2..20) never overlaps it.
 				icon._width = 18;
 				icon._height = 27;
 				icon._x = 2;
-				icon._alpha = objective.failed ? 50 : 100;
+				// Native failed artwork already carries its subdued Journal color.
+				icon._alpha = objective.failed && !skinIcon ? 50 : 100;
 				icon.filters = [
 					new flash.filters.GlowFilter(0x000000, 1, 4, 4, 4, 2, false, false)
 				];

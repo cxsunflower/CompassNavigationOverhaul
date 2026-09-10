@@ -1,7 +1,7 @@
 
 
-	// Step 2 fallback artwork keeps layout testable before the supplied assets
-	// are imported in the next step. Linkage assets take precedence when present.
+	// Emergency fallback if a skin linkage cannot be attached.
+	// The default skin uses extracted Journal vectors, not these primitives.
 	private function DrawDividerFallback(a_parent:MovieClip, a_width:Number, a_height:Number):MovieClip
 	{
 		var art:MovieClip = a_parent.createEmptyMovieClip("Art", a_parent.getNextHighestDepth());
@@ -16,7 +16,7 @@
 		return art;
 	}
 
-	// Reuse the supplied art, masking each side separately so the center gap
+	// Reuse the independent skin art, masking each side separately so the center gap
 	// follows the translated label without stretching the entire ornament.
 	private function DrawDividerWing(a_parent:MovieClip, a_name:String, a_width:Number, a_height:Number, a_right:Boolean):MovieClip
 	{
@@ -31,10 +31,10 @@
 			return wing;
 		}
 		wing.rightSide = a_right;
-		var sourceWidth:Number = a_right ? 735 : 734;
+		var sourceWidth:Number = 172.75;
 		art._xscale = 100 * a_width / sourceWidth;
-		art._yscale = 100 * a_height / 63;
-		art._x = a_right ? -1313 * a_width / sourceWidth : 0;
+		art._yscale = 100 * a_height / 14.85;
+		art._x = a_right ? -308.5 * a_width / sourceWidth : 0;
 		var maskClip:MovieClip = wing.createEmptyMovieClip("Mask", wing.getNextHighestDepth());
 		maskClip.beginFill(0xFFFFFF, 100);
 		maskClip.moveTo(0, 0);
@@ -58,9 +58,9 @@
 			a_wing.lineTo(a_width, a_wing.layoutHeight * 0.5);
 			return;
 		}
-		var sourceWidth:Number = a_wing.rightSide ? 735 : 734;
+		var sourceWidth:Number = 172.75;
 		a_wing.Art._xscale = 100 * a_width / sourceWidth;
-		a_wing.Art._x = a_wing.rightSide ? -1313 * a_width / sourceWidth : 0;
+		a_wing.Art._x = a_wing.rightSide ? -308.5 * a_width / sourceWidth : 0;
 		a_wing.Mask._width = a_width;
 	}
 

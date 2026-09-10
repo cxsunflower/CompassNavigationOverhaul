@@ -1,4 +1,4 @@
-"""Rebuild QuestList scripts and the three supplied objective-art symbols.
+"""Rebuild QuestList scripts and the independent Journal-vector skin.
 
 Usage: python tools/build_questlist_swf.py --ffdec <ffdec-cli.jar>
        python tools/build_questlist_swf.py --ffdec <ffdec-cli.jar> --output <temporary.swf>
@@ -15,13 +15,13 @@ import zlib
 import struct
 import xml.etree.ElementTree as ET
 
-from build_questlist_art import ART, SOURCE_FILES as ART_SOURCE_FILES, TITLE_TARGETS, build_title_art, build_art, check_xml
+from build_questlist_art import ART, SOURCE_FILES as ART_SOURCE_FILES, TITLE_TARGETS, SKIN_TARGETS, build_title_art, build_art, check_xml
 from questlist_header_layout import wrap_header, check_header_layout
 from questlist_source import ENTRYPOINTS, compose_all
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = list(ENTRYPOINTS)
-TARGETS = ['assets/generated/QuestItemList.swf'] + [p.relative_to(ROOT).as_posix() for p in TITLE_TARGETS]
+TARGETS = ['assets/generated/QuestItemList.swf'] + [p.relative_to(ROOT).as_posix() for p in TITLE_TARGETS + SKIN_TARGETS]
 MANIFEST = ROOT / 'tools/questlist-swf.json'
 INPUTS = SOURCES + [p.relative_to(ROOT).as_posix() for p in ART_SOURCE_FILES] + ['tools/build_questlist_swf.py', 'tools/questlist_header_layout.py', 'tools/questlist_source.py']
 
@@ -83,7 +83,7 @@ def main():
             parser.error('--check and --output cannot be combined')
         if not MANIFEST.exists() or json.loads(MANIFEST.read_text()) != hashes():
             raise SystemExit('QuestList SWF/source mismatch; run tools/build_questlist_swf.py --ffdec <jar>')
-        print('QuestList source and both SWF hashes verified.')
+        print('QuestList sources, generated movie, title libraries and skin libraries verified.')
         return
     if not args.ffdec or not args.ffdec.is_file():
         parser.error('--ffdec must name an existing JPEXS ffdec-cli.jar')
@@ -188,11 +188,16 @@ def main():
         if args.output:
             args.output.resolve().parent.mkdir(parents=True, exist_ok=True)
             args.output.resolve().write_bytes(output.read_bytes())
+            skin_dir = args.output.resolve().parent / '!assets'
+            skin_dir.mkdir(parents=True, exist_ok=True)
+            (skin_dir / 'QuestItemListSkin.swf').write_bytes((art_work / 'QuestItemListSkin.swf').read_bytes())
         else:
             title_art = build_title_art(args.ffdec.resolve(), work)
             (ROOT / TARGETS[0]).write_bytes(output.read_bytes())
             for target in TITLE_TARGETS:
                 target.write_bytes(title_art)
+            for target in SKIN_TARGETS:
+                target.write_bytes((art_work / 'QuestItemListSkin.swf').read_bytes())
     if not args.output:
         MANIFEST.write_text(json.dumps(hashes(), indent=2) + '\n', encoding='utf-8')
     print('QuestList compiled; six-argument ABI, separate objectives, text layout and artwork verified.')
