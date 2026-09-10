@@ -2,6 +2,8 @@
 
 <!-- 定位：L1 项目索引，只记录项目身份、当前状态和按需导航。 -->
 
+> 历史索引快照，仅作证据；现状以 [CONTEXT](../CONTEXT.md) 为准。
+
 # Compass Navigation Overhaul VR
 
 ## 当前：QuestList 源码模块化与布局验收
@@ -13,7 +15,7 @@ MCM 任务列表页已改为左右分栏：左侧“显示”，右侧“罗盘�
 
 面板期望上限仍为 110%，自动缩小下限仍为 min(90,期望值)；现在固定装饰内宽→自动缩小→整段/整行省略，安全底边和名称原位渐变不变。偏移过大时面板可能超出安全区而隐藏，应从 0 开始小幅调整。
 
-验证与部署：已将QuestItem/QuestItemList拆为13个职责模块，构建期组合回原两个入口，71个函数体与本轮冻结基线逐字一致；源码说明见[模块目录](../swf/questlist/README.md)。10/10模块测试、45/45反编译布局模拟、3/3包装器、MCM10/10及三项SWF哈希检查通过；27项QuestList源码/产物清单和主包/CHS完整性校验通过，`build.bat`成功（原生代码未变，DLL无需重新编译）。**本轮新包未部署、未VR验收**；MO2未覆盖，已安装版本沿用13:09记录。提前省略修复与红框调试保留，实际VR可视边界仍待采样。Git未暂存/提交，原始素材与`decompiled/`未改。
+验证与部署：已将QuestItem/QuestItemList拆为13个职责模块，构建期组合回原两个入口，71个函数体与本轮冻结基线逐字一致；源码说明见[模块目录](../../swf/questlist/README.md)。10/10模块测试、45/45反编译布局模拟、3/3包装器、MCM10/10及三项SWF哈希检查通过；27项QuestList源码/产物清单和主包/CHS完整性校验通过，`build.bat`成功（原生代码未变，DLL无需重新编译）。**本轮新包未部署、未VR验收**；MO2未覆盖，已安装版本沿用13:09记录。提前省略修复与红框调试保留，实际VR可视边界仍待采样。Git未暂存/提交，原始素材与`decompiled/`未改。
 
 
 ## 项目身份
@@ -23,7 +25,7 @@ MCM 任务列表页已改为左右分栏：左侧“显示”，右侧“罗盘�
 - 项目管家初始化：2026-09-08；原项目创建时间未核实。
 
 ## 当前状态
-- 当前阶段：[S2 MCM 配置与菜单恢复](stages/s2-mcm.md)，进行中。
+- 当前阶段：[S2 MCM 配置与菜单恢复](../stages/s2-mcm.md)，进行中。
 - 黑区原因：用户确认任务/地点名称放大后，下半部分跨到顶部显示；此前装饰描边和库背景试验均已撤回，恢复原始素材。
 - 缩放：任务/地点名称、距离上限均为 150%，面板期望上限仍为 110%；旧保存值不改写，运行时限制生效。
 - 海拔箭头：保留素材约 35% 基础比例，仅按距离百分比缩放；名称变化不改变箭头大小。
@@ -37,19 +39,19 @@ MCM 任务列表页已改为左右分栏：左侧“显示”，右侧“罗盘�
 ## 阶段摘要
 | 阶段 | 状态与结果 | 详情 |
 |---|---|---|
-| S1 QuestList 调整 | 源码/构建验证完成，视觉待验收 | [S1](stages/s1-questlist.md) |
-| S2 MCM | Helper 已注册；150% 上限及箭头比例已部署 | [S2](stages/s2-mcm.md) |
-| S3 项目文档 | 分层文档完成；旧 docs 已合并移除 | [S3](stages/s3-documentation.md) |
+| S1 QuestList 调整 | 源码/构建验证完成，视觉待验收 | [S1](../stages/s1-questlist.md) |
+| S2 MCM | Helper 已注册；150% 上限及箭头比例已部署 | [S2](../stages/s2-mcm.md) |
+| S3 项目文档 | 分层文档完成；旧 docs 已合并移除 | [S3](../stages/s3-documentation.md) |
 
 ## 导航规则
-- 通用约定 → [agents.md](agents.md)。
-- 架构与模块定位 → [architecture](docs/architecture.md)。
-- QuestList 修改/构建 → [quest-list](docs/quest-list.md)。
-- MCM 配置/绑定与已知故障证据 → [mcm](docs/mcm.md)。
-- 排障入口 → [troubleshooting](docs/troubleshooting.md)。
-- 可复用经验及遗留问题 → [experience](docs/experience.md)。
-- 历史实验与回退 → [QuestList 历史](docs/quest-list-history.md)，仅按需读取。
-- 安装、操作或开发上手 → [使用手册](user-manual/README.md)。
+- 通用约定 → [agents.md](../agents.md)。
+- 架构与模块定位 → [architecture](architecture.md)。
+- QuestList 修改/构建 → [quest-list](quest-list.md)。
+- MCM 配置/绑定与已知故障证据 → [mcm](mcm.md)。
+- 排障入口 → [troubleshooting](troubleshooting.md)。
+- 可复用经验及遗留问题 → [experience](experience.md)。
+- 历史实验与回退 → [QuestList 历史](quest-list-history.md)，仅按需读取。
+- 安装、操作或开发上手 → [使用手册](../user-manual/README.md)。
 - 隐私数据只在任务需要时读取 privacy.md，不预加载。
 
 距离居中后续：90 组单位/数值长度/箭头状态/缩放组合及连续帧稳定性测试通过，构建/哈希/打包通过；两份 Compass 已备份部署且哈希一致，实机待验收。
