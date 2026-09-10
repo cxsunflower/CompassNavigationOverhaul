@@ -12,20 +12,16 @@
 
 历史上 22:26 启动曾出现 Helper 加载失败；后续 22:37 启动已成功注册设置/菜单。名称/距离及 QuestList 后续修复已有多轮部署记录，但仍需按各项说明完成 VR 实机验收；偏移范围和最大高度清理已完成。[详细记录](../docs/mcm.md)。
 
-## 任务详情提前显示省略号
-16:15版已修复UTF-8 BOM使保存INI首个Debug节被忽略的问题。完全重启SKSEVR后，先确认新日志的`[Settings] effective logLevel=1 layoutDebugAllowed=true`，以及`[QuestListDebug] level=1 allowed=true requested=true method=true state=enabled=true`。若有效级别仍为2，请提供该次日志；不要删除或重编码保存文件。只有上述状态正确但画面仍无红框时，才继续检查实际渲染。
+## HUD 几何和提前省略排查
+新 Debug 已构建、尚未部署。确认配套的新 DLL 与内嵌 Compass 已安装后，在 MCM「调试 → 日志级别」选择 Debug 或 Trace，关闭菜单后开启全部普通 HUD 诊断；切回 Info 或更高级别关闭。默认 Info，不再需要 bDebugOverlay；旧的 bShowQuestListLayout 也不参与判定。不要删除或重编码 MCM 保存文件。
 
-15:57原生修复已解决代码中首次嵌入漏同步调试开关的问题。完全重启SKSEVR后，在最新插件日志中确认`[QuestListDebug]`的`requested=true`、`method=true`及`state=enabled=true`。若requested=false，应检查实际保存/加载的日志级别和独立开关；若method=false，应核对实际加载的嵌入式SWF；只有运行时确认enabled=true仍没有图形时，才进一步检查VR渲染路径。不要靠反复改INI或猜测安全区定位。
+画面只显示 D/H/M/N/Q/F/V 短标记与最多两行中文。Q 是可见内容的保守逻辑范围，F 是完整内容，V 是逻辑视口；红色重叠提示不是实际像素遮挡证明。隐藏父级、缺失对象、文字放不下等原因写入插件日志，不强制显示画面。没有任务时仍能观察距离和聚焦标记。
 
-先确认已安装最新高度修复及调试叠加层主包/CHS，不要单独安装QuestItemList.swf。进入能够复现问题的同一任务画面，在MCM「调试 → 日志级别」选择Debug（或Trace），关闭菜单后重新看向罗盘使任务列表显示。此时应出现红框、数字标签和安全边界线；同时截取完整画面，保留正文、目标、省略号、红线与顶部摘要。调试开关需要设置重新应用，若菜单关闭后尚未更新，可再次开关菜单或重启游戏。
+复现时保留完整截图与同次启动的 `[HUDDebug]` 日志，重点比较动画帧、请求／实际缩放、父变换、四角、Q/F/V、间隙、fit/omission 及抑制原因。若日志出现 `observer SWF missing`，先核对实际覆盖来源，不盲目改 UV 或安全高度。逻辑边界和截图空白不能证明 VR 可用区域。
 
-红框表示整体Box/正文/目标，橙框表示标题装饰，青框和线表示局部遮罩及内容限制，虚线表示隐藏行。标签`R (x,y) w x h`是Flash根坐标包围盒，`L w x h`是局部逻辑尺寸。摘要中的Stage、Safe bottom、Content limit、Full bottom、Visible bottom、Fit、Omit用于判断实际省略原因，不代表VR物理像素或贴图UV边界。调试期间原有底部安全保护仍生效，框和数字也可能被真正的VR画面裁切。
+结束后在 MCM 将日志级别恢复 Info，关闭菜单应用。独立十字校准仍使用 `bCalibrateQuestList`，不会被普通开关改写；同时开启校准时普通叠加层暂时隐藏。
 
-如需完整日志，在同一任务画面将任务列表缩放临时调整一个步长再恢复，关闭菜单触发设置应用。新版本会按需刷新一次布局并写入`[QuestListLayout]`，不需要开启逐帧日志。请保留该行的Stage尺寸、rootScale、安全/内容限制、完整/可见底边、Header/Body尺寸、fitReason、omissionReason和目标行状态，并附上对应截图。
-
-完成诊断后将日志级别恢复Info。若需要保留Debug日志但关闭红框，可在用户插件INI的`[Debug]`分区设置`bShowQuestListLayout=0`，保存并重新加载设置；该独立开关默认1，不需要删除任何MCM保存文件。现有用户配置优先级仍然生效。
-
-若实际目标仍被省略，需依据这些数据判断是内容确实超过安全区、测量偏差还是VR映射问题。不要先删除保存配置、降低可读性下限或撤销底部安全保护。当前新包尚未实机验收，不能仅凭画面空白判定可用高度。[实现与验收说明](../docs/quest-list.md)。
+[完整定义与回归](../docs/hud-debug.md) · [校准操作](calibration.md) · [QuestList 实现](../docs/quest-list.md)
 
 ## 其他现象
 字形方框、描边、列表位置和源码/产物不同步的排查入口见 [问题导航](../docs/troubleshooting.md)。

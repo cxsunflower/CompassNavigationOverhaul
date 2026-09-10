@@ -23,7 +23,8 @@ swf/
         ├── Layout.as           Viewport fitting, scale search and viewport mask
         ├── Overflow.as         Whole-section omission and ellipsis placement
         ├── Diagnostics.as      Root-space logging and on-demand snapshots
-        └── Debug.as            Independent red-box overlay and labels
+        ├── Debug.as            Read-only visible/full geometry and detailed observations
+        └── Calibration.as      Independent boundary calibration and cleanup
 ```
 
 `tools/questlist_source.py` expands the explicit `// @include "item/Content.as"` directives before the existing JPEXS import. Paths are relative to `swf/questlist/`, not to the including file. The assembler rejects missing, duplicate, circular, escaping and unreferenced modules, as well as duplicate functions or unexpected classes. Every dependency is included in the source/SWF hash manifest.
@@ -48,3 +49,4 @@ python -X utf8 tools/tests/test_questlist_header_layout.py
 The Node runner in `tools/tests/questlist_layout.test.cjs` uses `questlist/harness.cjs` and three suites: `item.test.cjs`, `layout.test.cjs`, and `debug.test.cjs`. Tests run against the decompiled SWF, not merely the uncompiled fragments. The Python source tests cover module integrity and the preserved public entrypoints.
 
 For a release, build QuestList without `--output`, rebuild the Compass baseline when its source/hash check requires it, embed into both Compass movies, run all three SWF hash checks, then package through `build.bat`. Do not install a standalone QuestItemList SWF. Preserve user configurations, existing Git changes and the original artwork. See [the current build and acceptance guide](../../manager/docs/quest-list.md) for the complete workflow.
+Ordinary HUD drawing belongs only to `swf/compass/Debug.as`, composed into Compass. QuestList has 14 source modules; no debug drawing contributes to layout. See [HUD Debug](../../manager/docs/hud-debug.md).

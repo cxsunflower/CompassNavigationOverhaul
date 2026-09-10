@@ -9,10 +9,10 @@
 |---|---|
 | `build_questlist_art.py` | 把 `assets/source/questlist/art/` 的 SVG 矢量图建成原生 SWF 符号（ID 300–305）。一般不直接调用，由下条脚本调用 |
 | `questlist_header_layout.py` | 构建期新增Sprite 306，将原Title完整作为Header纳入DetailBox；验证原始符号及18帧动画不变，不修改原始基底 |
-| `questlist_source.py` | 组合 `swf/questlist/item/`、`list/` 下的13个源码模块，检查引用完整性、重复函数及原入口范围；可用 `--output` 导出可检查的完整源码 |
+| `questlist_source.py` | 组合 `swf/questlist/item/`、`list/` 下的14个源码模块，检查引用完整性、重复函数及原入口范围；可用 `--output` 导出可检查的完整源码 |
 | `build_questlist_swf.py` | 从不可变原始基底 + 两个AS2入口及其模块重建 `assets/generated/QuestItemList.swf`；`--check` 校验所有源码依赖与产物哈希一致 |
 | `embed_questlist_compass.py` | 把 QuestList 以原生 Sprite 511 嵌入两份 `Compass.swf`（`HUDMenu` / `VR_HMD_info`），资源 ID +500；`--check` 校验，`--output` 只做预检不替换发布文件 |
-| `build_compass_swf.py` | 把 `swf/Compass.as` / `swf/CompassMarkerInfo.as` 编入 `assets/generated/Compass.before-embedded.swf`（ffdec importScript，内联 `utils.as`，去 AS2 类型标注）；`--check` 校验源码与基底一致 |
+| `build_compass_swf.py` | 把 `swf/Compass.as` / `swf/CompassMarkerInfo.as` 编入 `assets/generated/Compass.before-embedded.swf`（ffdec importScript，内联 `utils.as` 与 `swf/compass/Debug.as`，读取真实动画元数据，去 AS2 类型标注）；`--check` 校验源码与基底一致 |
 
 ```powershell
 $ff = '完整路径\ffdec-cli.jar'
@@ -30,7 +30,7 @@ python tools/embed_questlist_compass.py --check
 完整步骤、反编译测试命令与部署边界见 [QuestList 当前说明](../manager/docs/quest-list.md)。逐条检查退出码，任一步失败就停止。
 当前完整层级为`DetailBox → Header / DetailBody / DetailContentMask`。构建脚本检查原版标题符号、动画、容器逻辑宽高及遮罩入口；完整布局/状态模拟需同时传入反编译的QuestItem类与时间轴脚本。包装器单元测试运行`python tools/tests/test_questlist_header_layout.py`，不能只执行单文件布局测试。
 源码编辑入口与各模块职责见[QuestList源码结构](../swf/questlist/README.md)。原两个AS2文件现在只保留类/时间轴声明、状态和模块引用；JPEXS仍只编译这两个组合后的入口，不引入新的运行时类、动画或加载边界。新增模块必须注册到入口，不能绕过构建脚本直接安装片段。
-高度修复新增根坐标比较、真实省略状态及`GetLayoutSnapshot`按需诊断。调试叠加层由Debug/Trace日志级别和`bShowQuestListLayout`独立开关共同控制，根级绘制不参与布局/遮罩；45/45布局测试另覆盖四角红框、隐藏行、门控、缓存、标签复用与卸载清理。修改`source/ui/`、`source/MessageListeners.cpp`或`source/settings/`后必须运行完整`build.bat`重编DLL，不能只用`nobuild`。MCM英文帮助修改时同时更新中文生成器及精确校验白名单；运行时日志需在部署后按需采集，不应把模拟结果当作VR安全区测量。
+普通诊断统一由 MCM Debug／Trace 开启、Info 及以上关闭；校准独立。唯一绘制层在 Compass，列表只提供数据；最终导出分别运行布局、观察器与距离回归。观察器测试为 `node tools/tests/compass_debug.test.cjs <QuestItem.as> <sprite511时间轴> <Compass时间轴>`，覆盖显隐、标签、限频及线段／Q／空列表反例。C++ 改动必须完整 `build.bat` 编译；构建不等于部署或 VR 验收。
 
 ## MCM 配置与 ESP
 
@@ -76,6 +76,9 @@ build\ini-input-test\ini_input.test.exe
 
 ## 发布边界校验
 
-VR独立面板由 `build_vr_quest_panel.py --ffdec <jar>` 构建，`--check`校验影片、美术和连续UV网格。QuestList更新后须同步重建，`build.bat`已将该检查纳入打包。运行机制见[独立VR面板](../manager/docs/vr-quest-panel.md)。
+独立掌上路径当前仅为静态原型；不存在 `build_vr_quest_panel.py`，build.bat 也不检查该工具。不得把它写成已完成的独立动态任务 UI。[原型范围](../manager/docs/palm-test-panel.md)。
 
 `python -X utf8 tools/verify_package.py --archives` 逐文件比较主包、CHS 暂存目录及 ZIP 与当前资源、DLL 和 LICENSE；拒绝缺失、额外文件、重复 ZIP 条目或哈希不一致。未生成 ZIP 时省略 `--archives`，`MAKE_CHS=0` 时加 `--main-only`。目录职责见 [资源说明](../assets/README.md)。
+
+## 文档符合性检查
+`python -X utf8 tools/check_manager_docs.py` 检查 manager 定位首行、L1 行数、项目版本残留及第一方 Markdown 链接／锚点。Skill 与隐私文件只读首行元数据，不改正文；语义、历史与当前状态仍需人工核对。

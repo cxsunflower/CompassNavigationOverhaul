@@ -1,21 +1,16 @@
-<!-- 定位：L2 按现象导航的排障入口，不重复保存具体故障日志。 -->
+<!-- 定位：L2 排障导航，区分代码、配置、安装与 VR 证据，不提供过期调试指令。 -->
 
-# 问题排查入口
+# 问题排查
 
-| 现象 | 首先检查 | 详情 |
+| 现象 | 优先核对 | 详情 |
 |---|---|---|
-| MCM 中没有罗盘菜单 | 最新 SKSE 日志中 Helper 是否真正加载 | [MCM 排查](mcm.md) |
-| 菜单未汉化 | CHS 是否覆盖同路径 config.json，是否被 overwrite 覆盖 | [MCM 安装关系](mcm.md) |
-| 校验提示暂存副本过期 | 修改母本后是否重新打包 | [MCM 修改流程](mcm.md) |
-| SWF/source mismatch | AS2、SVG、基底与哈希清单是否配套重建 | [SWF 工作流](quest-list.md) |
-| Debug模式没有布局红框 | 先读取最新有效日志级别、`[QuestListDebug]`与`debugState`；核对UTF-8 BOM首节兼容 | [配置读取](mcm.md)、[可视化调试](quest-list.md) |
-| 菱形过粗/装饰不清 | 区分图标描边与目标分隔装饰参数 | [样式](quest-list.md) |
-| 列表未跟随手掌 | 检查已撤回的 UV 方案边界，不再次强加补偿 | [历史档案](quest-list-history.md) |
+| MCM 菜单缺失 | 本次 Helper／插件 DLL 加载、脚本、目录和覆盖来源 | [MCM](mcm.md) |
+| Debug 无边框或中文状态 | 是否加载配套新 DLL／SWF、MCM 是否 Debug／Trace、共享祖先显隐、文字抑制原因 | [HUD Debug](hud-debug.md) |
+| 日志提示 observer SWF missing | 实际 SWF 覆盖来源，不先改坐标或 UV | [玩家排障](../user-manual/debugging.md) |
+| 目标提前省略或出现残片 | 当前 Q/F/V、fit/omission、父变换与同画面截图 | [QuestList](quest-list.md) |
+| 距离与标记疑似重叠 | 区分自身缩放、父级动画、逻辑 AABB 与实际像素 | [HUD Debug](hud-debug.md) |
+| 源码与游戏行为不同 | 编译、嵌入、最终导出测试、打包和实际安装逐层对照 | [开发流程](../user-manual/development.md) |
 
-先收集证据并确认日志时间；不要先删除 INI、重置菜单或清理存档。历史上的 Helper 加载失败已被后续成功注册日志取代；若菜单再次缺失，应按最新启动日志重新定位，具体证据与待查项只维护于 mcm.md。
-
-红框复测应在重新启动SKSEVR后将MCM日志级别设为Debug(1)，关闭菜单并查看独立摘要。新版诊断不再因普通HUD隐藏而自我消失；若仍无摘要，先检查最新插件日志中的`[QuestListLayout]`与`debugState`，区分设置未应用、SWF接口缺失、实例未创建和画面映射问题。不要靠删除用户INI、扩大安全区或恢复UV补偿来猜测原因。
-
-15:47–15:51真实日志已确认过一次原生初始化漏同步：MCM保存Debug但嵌入式实例enabled=false。15:57版已统一嵌入、兼容补丁和热重载路径。`requested=true; method=true; state=enabled=true`才表示开关已到达SWF；若这些成立仍没有画面，再调查实际渲染/字体/可视范围。日志位于Windows实际文档目录的`My Games/Skyrim VR/SKSE/`，不要假定用户目录一定在C盘。
-
-16:03–16:05复测进一步确认requested=false是保存INI的UTF-8 BOM使首个Debug节被原生读取器忽略。16:15版已加入临时去BOM视图，不修改用户文件。再次复测应先确认`[Settings] effective logLevel=1`和`[QuestListDebug] level=1 allowed=true requested=true`；如果仍为2，采集该次完整加载日志，不再通过反复覆盖SWF猜测。
+缺失对象、空列表和隐藏状态分别报告；固定中文状态在没有安全位置时允许隐藏。不应通过强制显示隐藏祖先来排障。
+使用本次启动日志和当前安装证据。旧阶段里的红框、R/L 数字和 debugState 接口不是当前指引；旧指南保留在[历史存档](guidance-history.md)。
+不得为缺少日志而先重置 MCM、清理存档、扩大安全区或恢复 UV 补偿。模拟测试不能证明真实 VR 可见范围。

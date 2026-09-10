@@ -10,9 +10,10 @@
 | AS2 / SVG / SWF | 重编译→嵌入→反编译回归→哈希检查→打包；[完整步骤](../docs/quest-list.md) |
 | QuestList源码模块 | 在`swf/questlist/item/`或`list/`按职责修改；原两个入口负责组合。先检查模块清单与组合源码，再执行完整SWF回归；[目录说明](../../swf/questlist/README.md) |
 | MCM 文案/默认值 | 更新英文与翻译规则→生成中文→绑定测试→打包→完整校验；[完整步骤](../docs/mcm.md) |
-| 文档 | 检查导航、相对链接、当前状态、L1 行数；不需要重新打包 |
+| 文档 | 运行 tools/check_manager_docs.py；检查当前语义与历史隔离，不需要重新打包 |
 
 ```powershell
+python -X utf8 tools/check_manager_docs.py
 python -X utf8 tools/questlist_source.py --output build/questlist-sources
 python -X utf8 tools/tests/test_questlist_source.py
 python -X utf8 tools/tests/test_mcm_bindings.py
