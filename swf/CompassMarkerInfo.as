@@ -20,6 +20,8 @@ class CompassMarkerInfo extends MovieClip
 	var DistanceScale:Number;
 	var NameCenter:Number;
 	var DistanceCenter:Number;
+	var DistanceBottom:Number;
+	var HeightBaseY:Number;
 	var HeightBaseScaleX:Number;
 	var HeightBaseScaleY:Number;
 
@@ -77,8 +79,15 @@ class CompassMarkerInfo extends MovieClip
 			{
 				this.DistanceCenter = this.Distance.TextFieldInstance._x + this.Distance.TextFieldInstance._width * 0.5;
 			}
+			if (this.DistanceBottom == undefined)
+			{
+				this.DistanceBottom = this.Distance.TextFieldInstance._y + this.Distance.TextFieldInstance._height;
+			}
 			this.Distance.TextFieldInstance._xscale = this.DistanceScale;
 			this.Distance.TextFieldInstance._yscale = this.DistanceScale;
+			// Distance sits ABOVE the compass marker. Grow upward, preserving its authored bottom.
+			// Do not move the animated Distance container or the marker itself.
+			this.Distance.TextFieldInstance._y = this.DistanceBottom - this.Distance.TextFieldInstance._height;
 			var arrowWidth:Number = 0;
 			var arrowGap:Number = 0;
 			if (this.Distance.HeightIndicatorInstance != undefined)
@@ -90,6 +99,7 @@ class CompassMarkerInfo extends MovieClip
 					this.HeightIndicatorInstance = this.Distance.HeightIndicatorInstance;
 					this.HeightBaseScaleX = this.HeightIndicatorInstance._xscale;
 					this.HeightBaseScaleY = this.HeightIndicatorInstance._yscale;
+					this.HeightBaseY = this.HeightIndicatorInstance._y;
 				}
 				this.HeightIndicatorInstance._xscale = this.HeightBaseScaleX * this.DistanceScale / 100;
 				this.HeightIndicatorInstance._yscale = this.HeightBaseScaleY * this.DistanceScale / 100;
@@ -106,6 +116,10 @@ class CompassMarkerInfo extends MovieClip
 			if (this.HeightIndicatorInstance != undefined)
 			{
 				var arrowBounds:Object = this.HeightIndicatorInstance.getBounds(this.Distance);
+				// Resolve the current Above/Below frame's original bottom from scaled bounds.
+				// Absolute base Y avoids cumulative drift through repeated scales/frame changes.
+				var arrowBottomOffset:Number = arrowBounds.yMax - this.HeightIndicatorInstance._y;
+				this.HeightIndicatorInstance._y = this.HeightBaseY + arrowBottomOffset * (100 / this.DistanceScale - 1);
 				this.HeightIndicatorInstance._x += this.Distance.TextFieldInstance._x +
 					this.Distance.TextFieldInstance._width + arrowGap - arrowBounds.xMin;
 			}

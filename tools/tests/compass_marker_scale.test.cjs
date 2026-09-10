@@ -47,7 +47,8 @@ function clip(width=100) {
       width=String(value).length*7+4;
       if(this.autoSize==='center') this._x+=(previous-this._width)/2;
     },
-    getBounds(){return {xMin:this._x-this._width/2,xMax:this._x+this._width/2};},
+    getBounds(){return {xMin:this._x-this._width/2,xMax:this._x+this._width/2,
+      yMin:this._y,yMax:this._y+(this.frame==='Below'?30:24)*this._yscale/100};},
     get _width(){return width*this._xscale/100;}, gotoAndStop(frame){this.frame=frame;}};
 }
 class MovieClip {
@@ -56,9 +57,11 @@ class MovieClip {
     this.Target.TextFieldInstance._x=-100;
     this.Target.QuestItemList=clip();
     this.Distance=clip();this.Distance.TextFieldInstance=clip(60);
+    this.Distance.TextFieldInstance._y=2;
     this.Distance.HeightIndicatorInstance=clip(12);
     this.Distance.HeightIndicatorInstance._xscale=35;
     this.Distance.HeightIndicatorInstance._yscale=35;
+    this.Distance.HeightIndicatorInstance._y=5.4;
   }
 }
 const start=cls.indexOf('function CompassMarkerInfo(');
@@ -156,3 +159,37 @@ marker.Target._y=950;marker.onEnterFrame();assert.equal(marker.Target.TextFieldI
 marker.Target._y=800;marker.onEnterFrame();assert.equal(marker.Target.TextFieldInstance._visible,true);
 assert.ok(timeline.includes('FocusedMarkerInfo.ApplyNameViewportGuard()'));
 console.log('PASS name animation boundary guard and restoration without hiding QuestList.');
+// Distance is above the navigation icon. Scaling must not move either readout bottom downward.
+const anchorMarker=new Marker();
+anchorMarker.UseMetricUnits=true;anchorMarker.Movie={_alpha:100};
+const field=anchorMarker.Distance.TextFieldInstance;
+const arrow=anchorMarker.Distance.HeightIndicatorInstance;
+const authoredTextBottom=field._y+field._height;
+const authoredArrowY=arrow._y, authoredArrowScaleY=arrow._yscale;
+const close=(a,b,message)=>assert.ok(Math.abs(a-b)<1e-7,message+': '+a+' != '+b);
+let verticalCases=0;
+for(const height of [900,-900,0,900]) {
+ for(const distance of [7,700,700000]) {
+  anchorMarker.SetDistanceAndHeightDifference(distance,height);
+  for(const scale of [100,150,25,125,50,150,100]) {
+   anchorMarker.SetDistanceScale(scale);
+   close(field._y+field._height,authoredTextBottom,'text bottom intrudes into marker space');
+   const authoredArrowBottom=authoredArrowY+(arrow.frame==='Below'?30:24)*authoredArrowScaleY/100;
+   close(arrow.getBounds().yMax,authoredArrowBottom,'arrow bottom intrudes into marker space');
+   const fieldY=field._y,arrowY=arrow._y;
+   for(let frame=0;frame<18;frame++) {
+    anchorMarker.Distance._y=-56+frame; // authored parent animation is not ours to overwrite
+    anchorMarker.onEnterFrame();
+    close(field._y,fieldY,'text Y drifts across frames');
+    close(arrow._y,arrowY,'arrow Y drifts across frames');
+    close(anchorMarker.Distance._y,-56+frame,'parent timeline position changed');
+   }
+   if(scale===100) {
+    close(field._y,2,'100% authored text Y not restored');
+    close(arrow._y,authoredArrowY,'100% authored arrow Y not restored');
+   }
+   verticalCases++;
+  }
+ }
+}
+console.log('PASS '+verticalCases+' distance bottom-anchor cases; authored parent animation and 100% positions preserved.');
