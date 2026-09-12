@@ -88,3 +88,6 @@ build\ini-input-test\ini_input.test.exe
 
 ## GitHub Actions工具
 `ci.py`提供version、package和verify-release命令：从唯一清单读取版本，打包现行主包／中文路径，生成来源SHA及ZIP哈希元数据，并校验发布产物。package会清理仓库build/package和dist，只用于构建输出，不修改游戏安装目录。详细入口、权限、固定JPEXS与发布限制见[开发手册](../manager/user-manual/development.md#github-actions)。`tests/test_ci.py`在临时合成输入上测试正常打包、篡改、错误来源／版本及缺失／额外文件，不能替代托管runner实测。
+
+### 正式发布输入
+release_files.py为build.bat、ci.py和verify_package.py提供共用规则：不带PalmTest实验资产、CNOQuestPanel或任何层级的meta.ini。链接生成的DLL构建记录必须为非实验且哈希匹配；旧DLL缺记录时先重新构建。实验资源和许可继续保留于源码树；正式包排除它们，不删除MO2管理文件。

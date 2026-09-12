@@ -69,3 +69,15 @@ python -X utf8 -m unittest discover -s tools/tests -p "test_*.py"
 
 ### 全新检出的SWF字节校验
 哈希清单校验的是原始字节。为已跟踪输入补充`-text`不会自动重写Git中的旧blob；工作区通过和Git过滤结果正确，都不能代替仓库快照验证。提交前应确认相关输入进入差异，并用隔离暂存索引生成候选树、导出到临时目录后运行三份SWF脚本的`--check`。不要关闭检查、修改清单掩盖差异，或在CI中悄悄重建资源。
+
+### CommonLib与插件运行时配置
+运行时宏仅由CommonLib的PUBLIC定义传递，插件不再用`-U`覆盖。六个Debug／RelWithDebInfo preset均显式指定ENABLE_SKYRIM_SE、ENABLE_SKYRIM_AE、ENABLE_SKYRIM_VR：all为ON／ON／ON，se-only为ON／ON／OFF，vr-only为OFF／OFF／ON。部署目标的选择也读取同一组选项。切换配置必须重新运行对应configure preset，不能沿用旧build.ninja。
+
+受限运行时要求递归检出CommonLib源码；不允许用运行时集合未经确认的find_package包代替，也拒绝显式COMMONLIB_PREBUILT_DIR覆盖。上游自动预编译选择器会为受限运行时退回源码构建；首次CI构建可能比此前全运行时预编译路径更慢。无子模块时运行`git submodule update --init --recursive`。不得通过删除宏或屏蔽D9025制造表面通过。
+
+### 正式包与PalmTest实验隔离
+CNO_BUILD_PALMTEST默认OFF，所有标准preset显式关闭；正式DLL不编译source/palmtest，也不注册其消息入口。仅实验开发时用`-DCNO_BUILD_PALMTEST=ON`重新配置；实验源码、资源和第三方声明保留，原有Palm Compass兼容设置不受影响。
+
+本地build.bat与CI共用tools/release_files.py：过滤任意层级、大小写的meta.ini，以及PalmTest命名资源／第三方声明、Interface/CNOQuestPanel实验目录；不从安装目录收集文件。正式主包现为15文件，汉化包1文件。MO2自行生成的meta.ini不是发布输入，不能删除用户安装目录中的管理数据。
+
+每次DLL链接后写入相邻的.build-profile.json，包含PalmTest开关和DLL SHA256；正式打包拒绝缺失、过期或实验配置记录，因此旧DLL需重新构建，不能直接使用跳过构建的打包模式。该记录不进入ZIP；build-metadata.json仍仅供Actions来源校验，不等同于MO2的meta.ini。

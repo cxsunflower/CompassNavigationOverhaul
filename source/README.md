@@ -14,7 +14,7 @@
 | `questlist/` | 目标数据、GFx 桥接、快照同步 |
 | `settings/` | INI 加载、设置分发与注册 |
 | `ui/` | Compass 的 GFx 方法、Infinity UI 接入、设置生命周期 |
-| `palmtest/` | 独立掌上原型：Runtime调度、Config只读配置、Scene只读查询、Surface面板资源、Pose变换；与完整QuestList分开 |
+| `palmtest/` | 默认不编译的独立掌上原型（CNO_BUILD_PALMTEST=ON才启用）：Runtime调度、Config只读配置、Scene只读查询、Surface面板资源、Pose变换；与完整QuestList分开 |
 | `NND/`、`RE/`、`utils/` | 第三方名字接口、引擎类型补充与通用工具 |
 
 编辑 Hook 时保持调用约定、地址偏移、安装顺序和指令校验；调试扫描属于任务匹配诊断，不是新的目标读取路径。修改原生代码后运行根目录 `build.bat`，不能用 `nobuild` 代替编译。游戏内行为仍需 VR 验收。
