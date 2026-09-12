@@ -4,60 +4,87 @@ on:
   workflow_dispatch:
     inputs:
       run-id:
-        description: "Build 工作流的 run ID（留空则使用最近一次成功的构建）"
+        description: Successful manual Build run ID to publish
         type: string
-        default: ""
+        required: true
+  workflow_call:
+    inputs:
+      run-id:
+        type: string
+        required: true
+      active-build:
+        type: boolean
+        default: false
 
 permissions:
   actions: read
   contents: write
 
+concurrency:
+  group: publish-${{ github.repository }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
     steps:
-      - name: 解析 run ID
-        id: runid
+      - name: Validate the source workflow run
+        id: source
         env:
           GH_TOKEN: ${{ github.token }}
-          INPUT_RUN_ID: ${{ inputs.run-id }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ inputs.run-id }}
+          ACTIVE_BUILD: ${{ inputs.active-build || false }}
         run: |
-          if [ -n "$INPUT_RUN_ID" ]; then
-            echo "id=$INPUT_RUN_ID" >> "$GITHUB_OUTPUT"
-          else
-            id=$(gh run list --workflow=build.yml --status=success --limit=1 --json databaseId --jq '.[0].databaseId')
-            if [ -z "$id" ]; then
-              echo "未找到成功的 Build 运行记录，请先运行 Build。" >&2
-              exit 1
-            fi
-            echo "id=$id" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: 下载构建产物
-        uses: actions/download-artifact@v4
+          set -euo pipefail
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]] || { echo 'Invalid run ID'; exit 1; }
+          gh api "repos/$GH_REPO/actions/runs/$RUN_ID" > run.json
+          python - <<'PY'
+          import json, os
+          r = json.load(open('run.json'))
+          assert r['head_repository']['full_name'] == os.environ['GH_REPO'], 'Foreign repository'
+          assert r['event'] == 'workflow_dispatch', 'Only manual builds may publish'
+          assert r['path'] in ('.github/workflows/build.yml', '.github/workflows/build-release.yml'), 'Not a build workflow'
+          active = os.environ['ACTIVE_BUILD'] == 'true'
+          if active:
+              assert str(r['id']) == os.environ['GITHUB_RUN_ID'], 'Active run must be the caller'
+              assert r['path'] == '.github/workflows/build-release.yml', 'Invalid active caller'
+          else:
+              assert r['status'] == 'completed' and r['conclusion'] == 'success', 'Build did not succeed'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write('sha=' + r['head_sha'] + '\n')
+          PY
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.source.outputs.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist
-          run-id: ${{ steps.runid.outputs.id }}
+          run-id: ${{ inputs.run-id }}
           github-token: ${{ github.token }}
-
-      - name: 提取版本号
+      - name: Verify artifact provenance and existing tag
         id: version
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
         run: |
-          zip=$(ls dist/ | grep -v -- '-CHS\.zip' | head -n1)
-          ver="${zip#Compass Navigation Overhaul VR }"
-          ver="${ver%.zip}"
-          if [ -z "$ver" ]; then
-            echo "无法从产物文件名提取版本号：$zip" >&2
-            exit 1
+          set -euo pipefail
+          python tools/ci.py verify-release --sha "$SOURCE_SHA"
+          version=$(python tools/ci.py version)
+          if git rev-parse --verify "refs/tags/v$version" >/dev/null 2>&1; then
+            test "$(git rev-parse "refs/tags/v$version^{commit}")" = "$SOURCE_SHA" || { echo 'Version tag points to another commit'; exit 1; }
           fi
-          echo "version=$ver" >> "$GITHUB_OUTPUT"
-
-      - name: 发布 Release
-        uses: softprops/action-gh-release@v2
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
+          target_commitish: ${{ steps.source.outputs.sha }}
           name: Compass Navigation Overhaul VR ${{ steps.version.outputs.version }}
-          body: ""
+          fail_on_unmatched_files: true
           files: dist/*.zip

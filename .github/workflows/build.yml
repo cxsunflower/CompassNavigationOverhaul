@@ -2,76 +2,111 @@ name: Build
 
 on:
   workflow_dispatch:
+  workflow_call:
+    outputs:
+      version:
+        value: ${{ jobs.build.outputs.version }}
+      source-sha:
+        value: ${{ jobs.build.outputs.source-sha }}
+
+permissions:
+  contents: read
 
 concurrency:
-  group: build-${{ github.ref }}
+  group: ${{ github.workflow }}-build-${{ github.ref }}
   cancel-in-progress: true
-
-env:
-  VCPKG_ROOT: C:\vcpkg
-  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\vcpkg-binary-cache
 
 jobs:
   build:
-    runs-on: windows-latest
-
+    runs-on: windows-2022
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      PYTHONUTF8: '1'
+      VCPKG_ROOT: C:\vcpkg
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\vcpkg-binary-cache
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      source-sha: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: 准备 vcpkg 二进制缓存目录
-        run: New-Item -ItemType Directory -Force $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
-
-      - name: 缓存 vcpkg 二进制包
-        uses: actions/cache@v4
         with:
-          path: vcpkg-binary-cache
-          key: vcpkg-${{ hashFiles('vcpkg.json', 'cmake/ports/**') }}
-          restore-keys: vcpkg-
-
-      - name: 设置 MSVC 环境
-        uses: ilammy/msvc-dev-cmd@v1
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
-
-      - name: 配置
-        run: cmake --preset build-relwithdebinfo-vr-only
-
-      - name: 编译
-        run: cmake --build --preset relwithdebinfo-vr-only
-
-      - name: 打包
-        shell: pwsh
+      - name: Read manifest version
+        id: version
         run: |
-          $ErrorActionPreference = 'Stop'
-          $ver = (Get-Content VERSION -First 1).Trim()
-          $dll = 'build/relwithdebinfo-vr-only/CompassNavigationOverhaulVR.dll'
-          if (-not (Test-Path $dll)) { throw "缺少编译产物：$dll" }
-
-          $stage   = 'build/package/main'
-          $stageZh = 'build/package/chs'
-          $cfg     = 'MCM/Config/Compass Navigation Overhaul VR'
-
-          robocopy assets/main $stage /E /XF config.zh-CN.json /NFL /NDL /NJH /NJS /NP
-          if ($LASTEXITCODE -ge 8) { throw '复制静态资源失败' }
-
-          New-Item -ItemType Directory -Force "$stage/SKSE/Plugins" | Out-Null
-          Copy-Item $dll "$stage/SKSE/Plugins/"
-          Copy-Item LICENSE "$stage/LICENSE"
-
-          New-Item -ItemType Directory -Force "$stageZh/$cfg" | Out-Null
-          Copy-Item "assets/main/$cfg/config.zh-CN.json" "$stageZh/$cfg/config.json"
-
-          New-Item -ItemType Directory -Force dist | Out-Null
-          7z a -tzip "dist/Compass Navigation Overhaul VR $ver.zip" "$stage/*" '-xr!*.pdb'
-          if ($LASTEXITCODE -ne 0) { throw '生成主包失败' }
-          7z a -tzip "dist/Compass Navigation Overhaul VR $ver-CHS.zip" "$stageZh/*"
-          if ($LASTEXITCODE -ne 0) { throw '生成中文包失败' }
-
-          Get-ChildItem dist
-
-      - name: 上传构建产物
-        uses: actions/upload-artifact@v4
+          $version = python tools/ci.py version
+          if ($LASTEXITCODE) { throw 'Invalid version' }
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Check source, generated resources and documentation
+        run: |
+          foreach ($tool in @('build_questlist_swf.py', 'build_compass_swf.py', 'embed_questlist_compass.py')) {
+            python "tools/$tool" --check
+            if ($LASTEXITCODE) { throw "$tool failed; rebuild matching SWFs locally" }
+          }
+          python tools/check_manager_docs.py
+          if ($LASTEXITCODE) { throw 'Documentation check failed' }
+          python -m unittest discover -s tools/tests -p 'test_*.py'
+          if ($LASTEXITCODE) { throw 'Regression tests failed' }
+      - name: Install pinned JPEXS and test final embedded movies
+        run: |
+          $url = 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip'
+          $archive = Join-Path $env:RUNNER_TEMP 'ffdec.zip'
+          Invoke-WebRequest $url -OutFile $archive
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne '0333b56998a55bd83f4e0deb678a811fcdc45607582b4f5dd438309c8c3ad5ce') { throw 'JPEXS checksum mismatch' }
+          $ffdir = Join-Path $env:RUNNER_TEMP 'ffdec'
+          Expand-Archive $archive $ffdir
+          $ff = (Get-ChildItem $ffdir -Filter ffdec-cli.jar -Recurse | Select-Object -First 1).FullName
+          if (-not $ff) { throw 'JPEXS CLI missing' }
+          foreach ($menu in @('HUDMenu', 'VR_HMD_info')) {
+            $export = "build/ci-export/$menu"
+            $movie = "assets/main/Interface/InfinityUI/$menu/HUDMovieBaseInstance/CompassShoutMeterHolder/Compass.swf"
+            java -jar $ff -export script $export $movie
+            if ($LASTEXITCODE) { throw "Export failed: $menu" }
+            $s = "$export/scripts"
+            node tools/tests/questlist_layout.test.cjs "$s/__Packages/QuestItem.as" "$s/DefineSprite_511/frame_1/DoAction.as"
+            if ($LASTEXITCODE) { throw "Layout tests failed: $menu" }
+            node tools/tests/compass_debug.test.cjs "$s/__Packages/QuestItem.as" "$s/DefineSprite_511/frame_1/DoAction.as" "$s/frame_1/DoAction.as"
+            if ($LASTEXITCODE) { throw "Observer tests failed: $menu" }
+            node tools/tests/compass_marker_scale.test.cjs $s
+            if ($LASTEXITCODE) { throw "Distance tests failed: $menu" }
+          }
+      - name: Prepare dependency cache
+        run: New-Item -ItemType Directory -Force $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+      - uses: actions/cache@v4
+        with:
+          path: vcpkg-binary-cache
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-vs2022-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'CMakePresets.json', 'cmake/**', '.gitmodules') }}
+          restore-keys: vcpkg-${{ runner.os }}-${{ runner.arch }}-vs2022-
+      - name: Configure VR build
+        run: cmake --preset build-relwithdebinfo-vr-only
+      - name: Build VR plugin
+        run: cmake --build --preset relwithdebinfo-vr-only --parallel 2
+      - name: Package and verify main and CHS archives
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: python tools/ci.py package --sha $env:SOURCE_SHA
+      - uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/*.zip
+          path: |
+            dist/*.zip
+            dist/build-metadata.json
           if-no-files-found: error
+          retention-days: 14

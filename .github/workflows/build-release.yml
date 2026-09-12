@@ -4,107 +4,23 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: "是否发布 GitHub Release（版本号取自 VERSION 文件）"
+        description: Publish the verified artifacts (version from vcpkg.json)
         type: boolean
         default: false
 
-concurrency:
-  group: build-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  VCPKG_ROOT: C:\vcpkg
-  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\vcpkg-binary-cache
+permissions:
+  contents: read
 
 jobs:
   build:
-    runs-on: windows-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: 准备 vcpkg 二进制缓存目录
-        run: New-Item -ItemType Directory -Force $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
-
-      - name: 读取版本号
-        id: version
-        run: echo "version=$((Get-Content VERSION -First 1).Trim())" >> $env:GITHUB_OUTPUT
-
-      - name: 缓存 vcpkg 二进制包
-        uses: actions/cache@v4
-        with:
-          path: vcpkg-binary-cache
-          key: vcpkg-${{ hashFiles('vcpkg.json', 'cmake/ports/**') }}
-          restore-keys: vcpkg-
-
-      - name: 设置 MSVC 环境
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-
-      - name: 配置
-        run: cmake --preset build-relwithdebinfo-vr-only
-
-      - name: 编译
-        run: cmake --build --preset relwithdebinfo-vr-only
-
-      - name: 打包
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $ver = (Get-Content VERSION -First 1).Trim()
-          $dll = 'build/relwithdebinfo-vr-only/CompassNavigationOverhaulVR.dll'
-          if (-not (Test-Path $dll)) { throw "缺少编译产物：$dll" }
-
-          $stage   = 'build/package/main'
-          $stageZh = 'build/package/chs'
-          $cfg     = 'MCM/Config/Compass Navigation Overhaul VR'
-
-          robocopy assets/main $stage /E /XF config.zh-CN.json /NFL /NDL /NJH /NJS /NP
-          if ($LASTEXITCODE -ge 8) { throw '复制静态资源失败' }
-
-          New-Item -ItemType Directory -Force "$stage/SKSE/Plugins" | Out-Null
-          Copy-Item $dll "$stage/SKSE/Plugins/"
-          Copy-Item LICENSE "$stage/LICENSE"
-
-          New-Item -ItemType Directory -Force "$stageZh/$cfg" | Out-Null
-          Copy-Item "assets/main/$cfg/config.zh-CN.json" "$stageZh/$cfg/config.json"
-
-          New-Item -ItemType Directory -Force dist | Out-Null
-          7z a -tzip "dist/Compass Navigation Overhaul VR $ver.zip" "$stage/*" '-xr!*.pdb'
-          if ($LASTEXITCODE -ne 0) { throw '生成主包失败' }
-          7z a -tzip "dist/Compass Navigation Overhaul VR $ver-CHS.zip" "$stageZh/*"
-          if ($LASTEXITCODE -ne 0) { throw '生成中文包失败' }
-
-          Get-ChildItem dist
-
-      - name: 上传构建产物
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/*.zip
-          if-no-files-found: error
-
+    uses: ./.github/workflows/build.yml
   release:
     if: inputs.publish
     needs: build
-    runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: write
-
-    steps:
-      - name: 下载构建产物
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
-
-      - name: 发布 Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ needs.build.outputs.version }}
-          name: Compass Navigation Overhaul VR ${{ needs.build.outputs.version }}
-          body: ""
-          files: dist/*.zip
+    uses: ./.github/workflows/release.yml
+    with:
+      run-id: ${{ github.run_id }}
+      active-build: true
