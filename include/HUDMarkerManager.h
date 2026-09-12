@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 
 #include "RE/H/HUDMarkerManager.h"
 
@@ -58,7 +59,7 @@ namespace CNO
 		// 相机前向量（世界坐标单位向量）：旋转矩阵 12 个候选轴与已验证 yaw 自校准。
 		bool GetCameraForward(RE::NiPoint3& a_forwardOut);
 
-		// 罗盘可见性：GFx _visible/_alpha 与 skyVR_HUD01 节点可见性三者 OR。
+		// Known hidden states veto visibility; VR requires a verified compass surface.
 		bool IsCompassVisible(const Compass* a_compass);
 
 		RE::NiAVObject* FindCompassNode();
@@ -102,7 +103,11 @@ namespace CNO
 		RE::NiPointer<RE::NiAVObject> compassNode;  // skyVR_HUD01 缓存
 		RE::NiPointer<RE::NiAVObject> handNode;     // 右手节点缓存
 
-		float nodeRetryTime = 0.0F;  // 节点查找失败 1 秒后重试
+		std::chrono::steady_clock::time_point compassSearchAfter{};
+		std::chrono::steady_clock::time_point handSearchAfter{};
+		bool compassVisibilityPassed = false;
+		float questListGateProbeTime = 0.0F;
+		std::string lastQuestListGate;
 		float gazeProbeTime = 0.0F;  // [QuestListGaze] 打点节流（约 2Hz）
 
 		std::unordered_map<RE::TESObjectREFR*, std::unordered_map<RE::TESQuest*, QuestItem>> questItems;

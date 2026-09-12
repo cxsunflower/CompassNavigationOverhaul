@@ -8,19 +8,25 @@ namespace CNO
 	{
 		using namespace settings::questlist;
 
+		// Visibility and gaze are independent user requirements. Disabling
+		// gaze must not bypass a still-enabled compass visibility gate.
+		const bool compassVisible = !requireCompassVisible || IsCompassVisible(a_compass);
+		compassVisibilityPassed = compassVisible;
 		if (!requireLookingAtCompass)
 		{
 			compassGazeActive = false;
-			return true;
+			return compassVisible;
 		}
-
-		const bool compassVisible = !requireCompassVisible || IsCompassVisible(a_compass);
 
 		RE::NiPoint3 forward{ 0.0F, 0.0F, 0.0F };
 		const bool haveForward = GetCameraForward(forward);
 
 		const std::uint32_t mode = GetEffectiveGazeMode();
-		const RE::NiPoint3 camPos = playerCamera->GetRuntimeData2().pos;
+		RE::NiPoint3 camPos = playerCamera->GetRuntimeData2().pos;
+		if (REL::Module::IsVR() && player) {
+			if (auto* nodes = player->GetVRNodeData(); nodes && nodes->HmdNode)
+				camPos = nodes->HmdNode->world.translate;
+		}
 
 		// 读数：mode 0 是俯角（越大越往下看），mode 1/2 是 3D 视线夹角（越小越正对）。
 		float reading = 180.0F;

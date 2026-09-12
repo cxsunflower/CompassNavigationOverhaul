@@ -87,7 +87,10 @@ namespace CNO
 		if (auto questItemList = QuestItemList::GetSingleton())
 		{
 			RE::ActorState* playerState = player->AsActorState();
-			bool canQuestItemListBeDisplayed = questItemList->CanBeDisplayed(player->GetParentCell(), playerState->IsWeaponDrawn());
+			const bool weaponDrawn = playerState->IsWeaponDrawn();
+			bool canQuestItemListBeDisplayed = questItemList->CanBeDisplayed(player->GetParentCell(), weaponDrawn);
+			// Evaluate gaze even if another gate fails, so diagnostics are not stale.
+			const bool gazePassed = IsLookingAtCompass(compass);
 			// Snapshot the current marker's quests before the per-frame maps are cleared.
 			auto CollectCurrentQuests = [&](RE::TESObjectREFR* a_marker) {
 				std::vector<QuestItem> result;
@@ -111,7 +114,7 @@ namespace CNO
 			// 注视门控：任务聚焦 + 罗盘可见 + 3D 视线看向罗盘，三者同时成立才计时 0.3 秒；
 			// 任一丢失走 !targetQuestMarker 分支，立即清空旧列表。
 			RE::TESObjectREFR* targetQuestMarker = canQuestItemListBeDisplayed && isFocusedQuestMarker &&
-					IsLookingAtCompass(compass) ?
+					gazePassed ?
 				focusedMarker->ref :
 				nullptr;
 
@@ -164,10 +167,32 @@ namespace CNO
 				}
 			}
 
+			if (spdlog::get_level() <= spdlog::level::debug) {
+				const char* reason = weaponDrawn && settings::questlist::hideInCombat ? "weapon" :
+					!canQuestItemListBeDisplayed ? "cell" : !isFocusedQuestMarker ? "no-quest" :
+					!compassVisibilityPassed ? "compass" : !gazePassed ? "gaze" :
+					displayedQuestMarker == targetQuestMarker ? "requested" : "settling";
+				compass->SetMember("questListGate", RE::GFxValue(reason));
+				questListGateProbeTime += timeManager->realTimeDelta;
+				if (lastQuestListGate != reason || questListGateProbeTime >= 0.5F) {
+					logger::debug("[QuestListGate] reason={} weaponDrawn={} hideWithWeapon={} policyPass={} questFocus={} requireVisible={} visibilityPass={} requireGaze={} gazePass={} nodeKnown={} nodeVisible={} pendingTime={:.3f}",
+						reason, weaponDrawn, settings::questlist::hideInCombat, canQuestItemListBeDisplayed,
+						isFocusedQuestMarker, settings::questlist::requireCompassVisible, compassVisibilityPassed,
+						settings::questlist::requireLookingAtCompass, gazePassed, compassNode.get() != nullptr,
+						compassNode.get() && IsNodeVisible(compassNode.get()), questListFocusTime);
+					lastQuestListGate = reason;
+					questListGateProbeTime = 0.0F;
+				}
+			}
+
 			if (targetQuestMarker && displayedQuestMarker == targetQuestMarker)
 			{
 				questItemList->AnchorBelow(compass->GetFocusedMarkerTargetTextField());
 			}
+		}
+
+		else if (spdlog::get_level() <= spdlog::level::debug) {
+			compass->SetMember("questListGate", RE::GFxValue("missing-list"));
 		}
 
 		facedMarkers.clear();

@@ -100,19 +100,19 @@ namespace hooks
 
 		// 在写入跳板前验证目标仍是近调用指令，避免地址库或 EXE 不匹配时破坏游戏代码。
 		const std::array callSites{
-			std::pair{ UpdateQuestsHook::Address(), "任务标记"sv },
-			std::pair{ AllowedToShowMapMarkerHook::Address1(), "地点世界空间（第一处）"sv },
-			std::pair{ AllowedToShowMapMarkerHook::Address2(), "地点世界空间（第二处）"sv },
-			std::pair{ UpdateLocationsHook::Address(), "地点标记"sv },
-			std::pair{ UpdateEnemiesHook::Address(), "敌人标记"sv },
-			std::pair{ UpdatePlayerSetMarkerHook::Address(), "玩家标记"sv }
+			std::pair{ UpdateQuestsHook::Address(), "quest markers"sv },
+			std::pair{ AllowedToShowMapMarkerHook::Address1(), "location worldspace (first site)"sv },
+			std::pair{ AllowedToShowMapMarkerHook::Address2(), "location worldspace (second site)"sv },
+			std::pair{ UpdateLocationsHook::Address(), "location markers"sv },
+			std::pair{ UpdateEnemiesHook::Address(), "enemy markers"sv },
+			std::pair{ UpdatePlayerSetMarkerHook::Address(), "player marker"sv }
 		};
 
 		for (const auto& [address, name] : callSites)
 		{
 			if (*reinterpret_cast<const std::uint8_t*>(address) != 0xE8)
 			{
-				SKSE::log::critical("Hook 指令验证失败：{}，地址 0x{:X}", name, address);
+				SKSE::log::critical("Hook instruction validation failed: {}, address 0x{:X}", name, address);
 				return false;
 			}
 		}
