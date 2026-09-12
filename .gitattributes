@@ -37,4 +37,4 @@ swf/questlist/**/*.as -text
 tools/*.py -text
 # Additional byte-exact inputs checked by GitHub Actions.
 swf/compass/*.as -text
-assets/source/questlist/art/journal-shapes.xml -text
+assets/source/questlist/art/journal-shapes.xml -text whitespace=cr-at-eol

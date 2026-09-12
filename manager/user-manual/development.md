@@ -66,3 +66,6 @@ python -X utf8 -m unittest discover -s tools/tests -p "test_*.py"
 - 汉化包：`Compass Navigation Overhaul VR <版本号>-CHS.zip`。
 - Release标题：`Compass Navigation Overhaul VR <版本号>`；Git标签：`v<版本号>`。
 - 版本来自vcpkg.json的version-string；build-metadata.json仅随Actions构建产物保存校验，不作为Release附件发布。
+
+### 全新检出的SWF字节校验
+哈希清单校验的是原始字节。为已跟踪输入补充`-text`不会自动重写Git中的旧blob；工作区通过和Git过滤结果正确，都不能代替仓库快照验证。提交前应确认相关输入进入差异，并用隔离暂存索引生成候选树、导出到临时目录后运行三份SWF脚本的`--check`。不要关闭检查、修改清单掩盖差异，或在CI中悄悄重建资源。
