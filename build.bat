@@ -131,11 +131,8 @@ if not "%MAKE_CHS%"=="0" (
     mkdir "%PKGZH%" || goto :fail
 )
 
-robocopy "%ASSET_MAIN%" "%PKG%" /E /COPY:DAT /DCOPY:DAT /R:2 /W:1 /XF config.zh-CN.json /NFL /NDL /NJH /NJS /NP > nul
-if errorlevel 8 (
-    echo [错误] 复制静态资源失败：%ASSET_MAIN%
-    goto :fail
-)
+python "%ROOT%tools\release_files.py" --source "%ASSET_MAIN%" --destination "%PKG%" --dll "%DLL%"
+if errorlevel 1 goto :fail
 copy /y "%DLL%" "%PKG%\SKSE\Plugins\" > nul || goto :fail
 copy /y "%ROOT%LICENSE" "%PKG%\LICENSE" > nul || goto :fail
 

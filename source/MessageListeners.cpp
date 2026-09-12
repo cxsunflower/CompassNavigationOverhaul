@@ -1,5 +1,7 @@
 #include "MessageListeners.h"
+#ifdef CNO_BUILD_PALMTEST
 #include "palmtest/PalmTest.h"
+#endif
 #include "Settings.h"
 
 #include "NND/NPCNameProvider.h"
@@ -14,7 +16,9 @@ const SKSE::LoadInterface* skse;
 void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg)
 {
 	if (!a_msg) return;
+#ifdef CNO_BUILD_PALMTEST
 	CNO::PalmTest::OnMessage(a_msg->type);
+#endif
 	// 所有插件加载完成后初始化外部集成与设置。
 	if (a_msg->type == SKSE::MessagingInterface::kPostLoad)
 	{

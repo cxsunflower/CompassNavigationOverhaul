@@ -6,18 +6,20 @@
         "patch": 0
     },
     "configurePresets": [
-      {
-        "name": "vcpkg",
-        "hidden": true,
-        "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "environment": { "VSLANG": "1033" },
-        "cacheVariables": {
-          "VCPKG_OVERLAY_PORTS": "${sourceDir}/cmake/ports/",
-          "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/",
-          "VCPKG_TARGET_TRIPLET": "x64-windows-static-md-vr",
-          "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
-        }
-      },
+        {
+            "name": "vcpkg",
+            "hidden": true,
+            "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+            "environment": {
+                "VSLANG": "1033"
+            },
+            "cacheVariables": {
+                "VCPKG_OVERLAY_PORTS": "${sourceDir}/cmake/ports/",
+                "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-static-md-vr",
+                "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+            }
+        },
         {
             "name": "commonlibsse-config",
             "hidden": true,
@@ -26,31 +28,44 @@
                 "COMMONLIBSSE_TEXT": "-DUNICODE -D_UNICODE"
             },
             "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "/permissive- /Zc:preprocessor /EHsc /utf-8 $penv{CXXFLAGS} $env{COMMONLIBSSE_COMPILER} $env{COMMONLIBSSE_PLATFORM} $env{COMMONLIBSSE_TEXT} $env{RUNTIME_DISABLE_FLAGS}"
+                "CNO_BUILD_PALMTEST": "OFF",
+                "CMAKE_CXX_FLAGS": "/permissive- /Zc:preprocessor /EHsc /utf-8 $penv{CXXFLAGS} $env{COMMONLIBSSE_COMPILER} $env{COMMONLIBSSE_PLATFORM} $env{COMMONLIBSSE_TEXT}"
             }
         },
         {
             "name": "commonlibsse-all",
             "hidden": true,
             "environment": {
-                "RUNTIME_DISABLE_FLAGS": "",
                 "COMMONLIBSSE_COMPILER": "/showIncludes"
+            },
+            "cacheVariables": {
+                "ENABLE_SKYRIM_SE": "ON",
+                "ENABLE_SKYRIM_AE": "ON",
+                "ENABLE_SKYRIM_VR": "ON"
             }
         },
         {
             "name": "commonlibsse-se-only",
             "hidden": true,
             "environment": {
-                "RUNTIME_DISABLE_FLAGS": "-UENABLE_SKYRIM_VR",
                 "COMMONLIBSSE_COMPILER": ""
+            },
+            "cacheVariables": {
+                "ENABLE_SKYRIM_SE": "ON",
+                "ENABLE_SKYRIM_AE": "ON",
+                "ENABLE_SKYRIM_VR": "OFF"
             }
         },
         {
             "name": "commonlibsse-vr-only",
             "hidden": true,
             "environment": {
-                "RUNTIME_DISABLE_FLAGS": "-UENABLE_SKYRIM_SE -UENABLE_SKYRIM_AE",
                 "COMMONLIBSSE_COMPILER": ""
+            },
+            "cacheVariables": {
+                "ENABLE_SKYRIM_SE": "OFF",
+                "ENABLE_SKYRIM_AE": "OFF",
+                "ENABLE_SKYRIM_VR": "ON"
             }
         },
         {

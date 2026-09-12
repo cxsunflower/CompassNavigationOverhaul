@@ -27,6 +27,13 @@ configure_file(
 file(GLOB_RECURSE headers CONFIGURE_DEPENDS "include/*.h" "source/*.h")
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS "source/*.cpp")
 
+option(CNO_BUILD_PALMTEST "Build the experimental independent PalmTest panel" OFF)
+if(NOT CNO_BUILD_PALMTEST)
+    list(FILTER sources EXCLUDE REGEX "/palmtest/")
+    list(FILTER headers EXCLUDE REGEX "/palmtest/")
+endif()
+
+
 source_group(
 	TREE
 		${CMAKE_CURRENT_SOURCE_DIR}
@@ -36,6 +43,22 @@ source_group(
 )
 
 # DLL 目标
+
+# CommonLib PUBLIC definitions are the sole source of runtime macros for the plugin.
+option(ENABLE_SKYRIM_SE "Build with Skyrim SE support" ON)
+option(ENABLE_SKYRIM_AE "Build with Skyrim AE support" ON)
+option(ENABLE_SKYRIM_VR "Build with Skyrim VR support" ON)
+if(NOT ENABLE_SKYRIM_SE AND NOT ENABLE_SKYRIM_AE AND NOT ENABLE_SKYRIM_VR)
+    message(FATAL_ERROR "At least one Skyrim runtime must be enabled")
+endif()
+set(CNO_ALL_RUNTIMES OFF)
+if(ENABLE_SKYRIM_SE AND ENABLE_SKYRIM_AE AND ENABLE_SKYRIM_VR)
+    set(CNO_ALL_RUNTIMES ON)
+endif()
+# The upstream explicit bundle override precedes its runtime compatibility guard.
+if(NOT CNO_ALL_RUNTIMES AND COMMONLIB_PREBUILT_DIR)
+    message(FATAL_ERROR "Restricted runtimes require CommonLib source; unset COMMONLIB_PREBUILT_DIR")
+endif()
 
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/lib/CommonLibSSE-NG/CMakeLists.txt")
 	message(STATUS "Using local CommonLibSSE-NG from lib/CommonLibSSE-NG")
@@ -48,6 +71,9 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/lib/CommonLibSSE-NG/CMakeLists.txt")
 	)
 	include(${CMAKE_CURRENT_SOURCE_DIR}/lib/CommonLibSSE-NG/cmake/CommonLibSSE.cmake)
 else()
+	if(NOT CNO_ALL_RUNTIMES)
+		message(FATAL_ERROR "Restricted runtimes require the CommonLibSSE-NG submodule; run git submodule update --init --recursive")
+	endif()
 	find_package(CommonLibSSE CONFIG REQUIRED)
 endif()
 find_package(spdlog REQUIRED CONFIG)
@@ -55,6 +81,18 @@ find_package(directxtk CONFIG REQUIRED)
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${headers} ${sources})
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    "$<$<BOOL:${CNO_BUILD_PALMTEST}>:CNO_BUILD_PALMTEST=1>")
+# A hash-bound sidecar prevents package-only runs from shipping an experimental DLL.
+set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY LINK_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/write_build_profile.cmake")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND}
+        "-DDLL=$<TARGET_FILE:${PROJECT_NAME}>"
+        "-DPALMTEST=${CNO_BUILD_PALMTEST}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/write_build_profile.cmake"
+    VERBATIM)
+
 
 target_include_directories(
 	${PROJECT_NAME}
@@ -91,16 +129,12 @@ target_precompile_headers(
 set(SKYRIM_SE_DIR "C:/Program Files (x86)/Steam/steamapps/common/Skyrim Special Edition" CACHE PATH "Skyrim SE 安装目录")
 set(SKYRIM_VR_DIR "C:/Program Files (x86)/Steam/steamapps/common/Skyrim VR" CACHE PATH "Skyrim VR 安装目录")
 
-if ("$ENV{RUNTIME_DISABLE_FLAGS}" STREQUAL "")
-	set(COPY_SE YES)
-	set(COPY_VR YES)
-elseif ("$ENV{RUNTIME_DISABLE_FLAGS}" STREQUAL "-UENABLE_SKYRIM_VR")
-	set(COPY_SE YES)
-	set(COPY_VR NO)
-elseif ("$ENV{RUNTIME_DISABLE_FLAGS}" STREQUAL "-UENABLE_SKYRIM_SE -UENABLE_SKYRIM_AE")
-	set(COPY_SE NO)
-	set(COPY_VR YES)
+# Deployment selection follows the same options as the dependency and plugin.
+set(COPY_SE OFF)
+if(ENABLE_SKYRIM_SE OR ENABLE_SKYRIM_AE)
+    set(COPY_SE ON)
 endif()
+set(COPY_VR ${ENABLE_SKYRIM_VR})
 
 if (COPY_SE AND EXISTS "${SKYRIM_SE_DIR}/Data/SKSE/Plugins")
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

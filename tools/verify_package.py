@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import zipfile
+from release_files import release_assets, verify_dll
 
 ROOT = Path(__file__).resolve().parents[1]
 MOD = "Compass Navigation Overhaul VR"
@@ -35,7 +36,8 @@ def main():
     parser.add_argument('--archives', action='store_true', help='Also verify both release ZIPs')
     parser.add_argument('--main-only', action='store_true', help='Use when MAKE_CHS=0')
     args = parser.parse_args()
-    expected = files(ROOT / 'assets/main')
+    verify_dll(ROOT / 'build/relwithdebinfo-vr-only/CompassNavigationOverhaulVR.dll')
+    expected = {name: digest(p.read_bytes()) for name, p in release_assets(ROOT / 'assets/main').items()}
     if any(Path(p).name in ('QuestItemList.swf', 'config.zh-CN.json') for p in expected):
         raise ValueError('Standalone QuestItemList or locale authoring file in main assets')
     expected['SKSE/Plugins/CompassNavigationOverhaulVR.dll'] = digest(

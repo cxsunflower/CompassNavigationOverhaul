@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import zipfile
+from release_files import excluded, stage_assets, verify_dll
 
 ROOT = Path(__file__).resolve().parents[1]
 MOD = 'Compass Navigation Overhaul VR'
@@ -30,6 +31,7 @@ def package(root, sha):
     for p in (dll, chinese, root / 'LICENSE'):
         if not p.is_file():
             raise ValueError(f'Missing release input: {p}')
+    verify_dll(dll)
     stage = root / 'build/package'
     dist = root / 'dist'
     # These are generated CI outputs, never installed game directories.
@@ -37,7 +39,7 @@ def package(root, sha):
         if p.exists():
             shutil.rmtree(p)
         p.mkdir(parents=True)
-    shutil.copytree(root / 'assets/main', stage / 'main')
+    stage_assets(root / 'assets/main', stage / 'main')
     (stage / 'main/SKSE/Plugins').mkdir(parents=True, exist_ok=True)
     shutil.copy2(dll, stage / 'main/SKSE/Plugins' / dll.name)
     shutil.copy2(root / 'LICENSE', stage / 'main/LICENSE')
@@ -70,6 +72,8 @@ def verify_release(directory, sha, expected_version):
             raise ValueError(f'Archive hash mismatch: {name}')
         with zipfile.ZipFile(p) as z:
             names = [i.filename for i in z.infolist() if not i.is_dir()]
+            if any(excluded(n) for n in names):
+                raise ValueError(f'Non-production file in archive: {name}')
             if len(names) != len(set(names)) or z.testzip() is not None:
                 raise ValueError(f'Invalid archive: {name}')
 
