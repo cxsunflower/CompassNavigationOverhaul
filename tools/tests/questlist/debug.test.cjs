@@ -33,7 +33,7 @@ test('ordinary debug is a read-only provider, not a legacy overlay',()=>{
 
 test('calibration bypasses masks and fitting, preserves settings and restores normal content',()=>{
   const {list,ctx}=setup('Description',400);
-  list.Update();const runs=list.fitRuns,scale=list.TEXT_SCALE,x=list.offsetX,y=list.offsetY;
+  list.Update();const runs=list.fitRuns,scale=list.TEXT_SCALE,x=list.offsetX;
   list.SetCalibration(true,0,700,40,512);list.Update();
   const overlay=list.calibrationOverlay;
   assert.equal(overlay._parent,list._parent);assert.equal(overlay.mask,undefined);
@@ -48,7 +48,7 @@ test('calibration bypasses masks and fitting, preserves settings and restores no
   list.SetCalibration(true,1,200,40,860);assert.equal(overlay.Tick0.text,'X=200');
   assert.equal(overlay.children.size,9);
   list.SetCalibration(false,0,700,40,512);assert.equal(overlay.removed,true);
-  assert.equal(list._alpha,100);assert.equal(list.TEXT_SCALE,scale);assert.equal(list.offsetX,x);assert.equal(list.offsetY,y);
+  assert.equal(list._alpha,100);assert.equal(list.TEXT_SCALE,scale);assert.equal(list.offsetX,x);assert.equal(list.offsetY,undefined);
   list.SetCalibration(true,0,900,2,512);const second=list.calibrationOverlay;
   vm.runInContext('onUnload()',ctx);assert.equal(second.removed,true);
 });

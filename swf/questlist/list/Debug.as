@@ -22,8 +22,7 @@ function GetDebugObservation():Object
             if (item._visible != false && item._alpha > 0 && item.DetailBox._visible != false && item.DetailBox._alpha > 0 && item.ObjectiveItemList[j]._visible) visible++;
     }
     if (overflowLabel != undefined && overflowLabel._visible && overflowLabel._alpha > 0)
-        visibleRects.push({xMin:overflowLabel._x,yMin:overflowLabel._y,
-            xMax:overflowLabel._x+overflowLabel._width,yMax:overflowLabel._y+overflowLabel._height});
+        visibleRects.push(overflowLabel.getBounds(this));
     for (var r:Number = 0; r < visibleRects.length; r++)
     {
         var next:Object = visibleRects[r];

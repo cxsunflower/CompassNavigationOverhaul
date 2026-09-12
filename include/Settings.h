@@ -71,11 +71,8 @@ namespace settings
 
 	namespace questlist
 	{
-		// Legacy position keys are read for compatibility only.
+		// Horizontal offset from the compass text anchor.
 		inline float offsetX = 0.0F;
-		inline float offsetY = 0.0F;
-		inline float positionX = 0.008F;
-		inline float positionY = 0.125F;
 		inline float textScale = 100.0F;
 
 		inline bool showInExteriors = true;

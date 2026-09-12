@@ -32,15 +32,15 @@ test('default-off and source contains no legacy drawing or mutating gameplay met
  const {compass}=setup();assert.equal(compass.debugEnabled,false);assert.equal(compass.debugOverlay,undefined);
  for(const token of ['beginFill(','.gotoAndStop(','.gotoAndPlay(','.setMask(','SetLayoutDebug','UpdateLayoutDebug'])assert.ok(!debug.includes(token),token);
 });
-test('all seven IDs and short Chinese status; no fill, layout mutation or label overlap',()=>{
+test('all seven IDs and short English status; no fill, layout mutation or label overlap',()=>{
  const {compass,list,distance}=setup();const before=[list.fitRuns,list._x,list._y,list._alpha,list.effectiveScale,distance._y];
  compass.SetDebugOverlay(true,false,true);
  assert.deepEqual([list.fitRuns,list._x,list._y,list._alpha,list.effectiveScale,distance._y],before);
  assert.equal(compass.debugOverlay._parent,list._root);
  const fields=compass.debugOverlay.Labels;
  for(const id of 'DHMNQFV')assert.equal(fields['ID'+id].text,id);
- assert.match(fields.Status.text,/距离 150%.*稳定显示/);
- assert.equal(fields.Warning._visible,false);assert.equal(compass.debugOverlay.Lines.fill,undefined);
+ assert.match(fields.Status.text,/Distance 150%.*Info shown/);
+ assert.equal(fields.Warning._visible,true);assert.match(fields.Warning.text,/QL: unknown/);assert.equal(compass.debugOverlay.Lines.fill,undefined);
  const visible=[...fields.children.values()].filter(f=>f._visible);
  for(let i=0;i<visible.length;i++)for(let j=i+1;j<visible.length;j++)assert.equal(compass.DebugOverlap(visible[i].getBounds(list._root),visible[j].getBounds(list._root)),0);
 });
@@ -54,7 +54,8 @@ test('hidden ancestors, alpha and calibration suppress root overlay without chan
 });
 test('distance observation continues with no quests, and missing objects report n/a',()=>{
  const {compass,list,tick,info}=setup();list.entries=[];compass.SetDebugOverlay(true,false,false);
- assert.equal(compass.debugOverlay.Labels.IDD._visible,true);
+ assert.equal(compass.debugOverlay.Labels.IDD._visible,false); // Fixture D is above the text band.
+ assert.equal(compass.debugOverlay.Labels.IDD.text,'D');
  assert.match(compass.DrainDebugLog(),/Q\{exists=true;state=empty-list/);
  assert.equal(compass.DebugNumber(undefined),'n/a');assert.equal(compass.DebugOverlap(undefined,{}),undefined);
  assert.equal(compass.DebugRegion('X',undefined,0,false).reason,'missing');
@@ -91,17 +92,58 @@ test('authored phase/reference data, settings snapshot, disable/re-enable cleanu
  const {compass,info,tick}=setup();compass.SetDebugOverlay(true,false,false);
  assert.equal(compass.debugTimeline.restFrame,12);assert.equal(compass.debugTimeline.distanceRest.y,-40.7);
  assert.match(compass.DrainDebugLog(),/authored-IdleShow-current-ancestors/);
- info._currentframe=2;tick(1);assert.match(compass.debugOverlay.Labels.Status.text,/淡入中/);assert.match(compass.DrainDebugLog(),/phase=FadeIn/);
+ info._currentframe=2;tick(1);assert.match(compass.debugOverlay.Labels.Status.text,/Fade in/);assert.match(compass.DrainDebugLog(),/phase=FadeIn/);
  compass.SetDebugOverlay(true,false,true);assert.match(compass.DrainDebugLog(),/event=settings/);
  const old=compass.debugOverlay;compass.SetDebugOverlay(false,false,false);assert.equal(old.removed,true);assert.equal(compass.debugQueue.length,0);
  compass.SetDebugOverlay(true,false,false);assert.notEqual(compass.debugOverlay,old);
 });
+test('summary starts next to marker border rather than the Stage edge',()=>{
+ const {compass,list,distance}=setup();compass.SetDebugOverlay(true,false,false);
+ const before=[list._x,list._y,list.fitRuns,distance._x,distance._y];
+ compass.debugSummarySlot=undefined;
+ const anchor={xMin:480,yMin:780,xMax:504,yMax:800};
+ compass.DebugLabels([{id:'M',reason:'visible',bounds:anchor}],'Distance 150% | Info shown','QL: gaze',true);
+ const status=compass.debugOverlay.Labels.Status;
+ assert.equal(status._visible,true);assert.equal(status._x,anchor.xMax+14);
+ assert.ok(status._x+status._width<=compass.Stage.width-8);
+ assert.deepEqual([list._x,list._y,list.fitRuns,distance._x,distance._y],before);
+});
+test('native gate reason is distinct from the info animation phase',()=>{
+ const {compass,tick}=setup();compass.SetDebugOverlay(true,false,false);compass.DrainDebugLog();
+ for(const reason of ['weapon','compass','gaze','no-quest','requested']){
+  compass.questListGate=reason;tick(1);
+  assert.match(compass.debugOverlay.Labels.Status.text,/Info shown/);
+  assert.match(compass.debugOverlay.Labels.Warning.text,new RegExp('QL: '+reason));
+  assert.match(compass.DrainDebugLog(),new RegExp('questListGate='+reason));
+ }
+});
+
 test('fixed summary never chases animation and hides when unsafe',()=>{
  const {compass,tick,distance}=setup();compass.SetDebugOverlay(true,false,false);
  const status=compass.debugOverlay.Labels.Status;const x=status._x,y=status._y;
  distance._x=x;distance._y=y;tick(1);assert.equal(status._visible,false);
  assert.equal(status._x,x);assert.equal(status._y,y);assert.match(compass.debugSuppressed,/no-safe-fixed-slot/);
 });
+test('all short IDs stay adjacent and inside the text band, or are suppressed',()=>{
+ const {compass}=setup();compass.SetDebugOverlay(true,false,false);
+ compass.debugSummarySlot=undefined;compass.debugTextBand={top:760,bottom:960};
+ for(const id of 'DHMNQFV'){
+  const region={id,reason:'visible',bounds:{xMin:400,yMin:790,xMax:430,yMax:810}};
+  compass.DebugLabels([region],'','',false);
+  const field=compass.debugOverlay.Labels['ID'+id];
+  assert.equal(field._visible,true);assert.equal(field._x,435);
+  assert.ok(field._y>=764&&field._y+field._height<=956);
+  // Logical Stage-valid but outside the continuous band: never move it far away.
+  region.bounds={xMin:400,yMin:200,xMax:430,yMax:220};
+  compass.DebugLabels([region],'','',false);assert.equal(field._visible,false);
+  assert.match(compass.debugSuppressed,new RegExp(id+':no-safe-label-slot'));
+ }
+ // If no band is known, suppress instead of guessing that the whole Stage is safe.
+ compass.debugTextBand=undefined;
+ compass.DebugLabels([{id:'D',reason:'visible',bounds:{xMin:400,yMin:790,xMax:430,yMax:810}}],'','',false);
+ assert.equal(compass.debugOverlay.Labels.IDD._visible,false);
+});
+
 test('segment clipping retains entering edges in both directions at all four sides',()=>{
  const {compass}=setup();const w={xMin:0,yMin:0,xMax:10,yMax:10};
  for(const [a,b] of [[[-5,5],[5,5]],[[15,5],[5,5]],[[5,-5],[5,5]],[[5,15],[5,5]]]){
@@ -128,5 +170,29 @@ test('empty list preserves object existence and logical V without inventing cont
  compass.SetDebugOverlay(true,false,false);const log=compass.DrainDebugLog();
  assert.match(log,/Q\{exists=true;state=empty-list/);assert.match(log,/V\{exists=true/);
  assert.ok(!log.includes('Q{exists=false'));
+});
+
+test('Q F V draw only original segments inside the list band without changing diagnostic geometry',()=>{
+ const {compass}=setup();compass.SetDebugOverlay(true,false,false);
+ compass.debugTextBand={top:760,bottom:960};const lines=compass.debugOverlay.Lines;
+ for(const id of ['Q','F','V'])for(const dash of [false,true]) {
+  const points=[{x:444.1,y:764.1},{x:733.8,y:764.1},{x:733.8,y:986.4},{x:444.1,y:986.4}];
+  const before=JSON.stringify(points);lines.clear();
+  compass.DebugDraw({id,reason:'visible',bounds:{yMax:986.4},points,color:0xffffff,dash});
+  assert.ok(lines.commands.length>0);assert.equal(JSON.stringify(points),before);
+  for(const c of lines.commands.filter(c=>c.op!=='stroke'))assert.ok(c.y>=760.999999 && c.y<=959.000001);
+  for(let i=1;i<lines.commands.length;i++) {
+   const a=lines.commands[i-1],b=lines.commands[i];
+   assert.ok(!(b.op==='line' && a.y===959 && b.y===959 && a.x!==b.x),'do not invent a bottom edge at the clipping boundary');
+  }
+ }
+ for(const band of [undefined,{top:NaN,bottom:960},{top:960,bottom:760}]) {
+  compass.debugTextBand=band;lines.clear();
+  compass.DebugDraw({id:'F',reason:'visible',bounds:{},points:[{x:10,y:800},{x:20,y:800}],color:1,dash:false});
+  assert.equal(lines.commands.filter(c=>c.op!=='stroke').length,0);
+ }
+ compass.debugTextBand={top:760,bottom:960};lines.clear();
+ compass.DebugDraw({id:'D',reason:'visible',bounds:{},points:[{x:20,y:650},{x:40,y:650}],color:1,dash:false});
+ assert.ok(lines.commands.some(c=>c.op==='line'&&c.y===650),'distance keeps its own Stage guard');
 });
 console.log(`${count} observer regression groups passed (decompiled SWF, not VR rendering).`);

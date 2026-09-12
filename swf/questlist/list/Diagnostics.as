@@ -4,7 +4,7 @@ function GetAnchorState():String
 {
     return "parent=" + _parent + "; text=" + anchorText + "; count=" + entries.length +
         "; list=" + _x + "," + _y + "; label=" + anchorText._x + "," + anchorText._y +
-        "; labelHeight=" + anchorText._height + "; panelScale=" + TEXT_SCALE + "; offset=" + offsetX + "," + offsetY +
+        "; labelHeight=" + anchorText._height + "; panelScale=" + TEXT_SCALE + "; offsetX=" + offsetX +
         "; effective=" + effectiveScale + "; widthFactor=" + effectiveWidth + "; overflow=" + fitOverflow + "; fitRuns=" + fitRuns + "; stage=" + Stage.width + "," + Stage.height + "; globalBounds=" + GetGlobalContentState() + GetClipDiagnostics();
 }
 

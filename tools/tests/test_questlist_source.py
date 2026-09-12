@@ -38,14 +38,14 @@ class SourceModulesTests(unittest.TestCase):
         timeline = sources["swf/QuestItemList.as"][0]
         item = sources["swf/QuestItem.as"][0]
         # Includes the Passenger geometry and bounded diagnostic helpers.
-        self.assertEqual(len(re.findall(r"(?m)^\s*(?:(?:public|private|static)\s+)*function\s+\w+\s*\(", timeline)), 48)
+        self.assertEqual(len(re.findall(r"(?m)^\s*(?:(?:public|private|static)\s+)*function\s+\w+\s*\(", timeline)), 50)
         self.assertEqual(len(re.findall(r"(?m)^\s*(?:(?:public|private|static)\s+)*function\s+\w+\s*\(", item)), 31)
         self.assertRegex(timeline, r"stop\(\);\s*$")
         self.assertEqual(timeline.count("_global.gfxExtensions = true;"), 1)
         self.assertEqual(item.count("class QuestItem extends MovieClip"), 1)
         self.assertIn("function AddQuest(a_type:Number, a_title:String, a_description:String, a_isInSameLocation:Boolean, a_objectives:Array, a_ageIndex:Number)", timeline)
         self.assertIn("function SetQuestInfo(a_type:Number, a_title:String, a_description:String, a_isInSameLocation:Boolean, a_objectives:Array, a_ageIndex:Number)", item)
-        for name in ("SetPanelSurface", "SetAnchor", "UpdateAnchor", "SetOffsets", "SetTextScale", "SyncQuests", "GetLayoutSnapshot", "GetDebugObservation", "GetDebugDetails", "SetCalibration", "Update", "onEnterFrame", "onUnload"):
+        for name in ("SetPanelSurface", "SetAnchor", "UpdateAnchor", "SetOffsetX", "SetTextScale", "SyncQuests", "GetLayoutSnapshot", "GetDebugObservation", "GetDebugDetails", "SetCalibration", "Update", "onEnterFrame", "onUnload"):
             self.assertIn("function " + name + "(", timeline)
         for name in ("GetContentBounds", "ApplyHeightLimit", "ReflowWidth", "GetDiagnosticRegions", "SetSide", "Show", "Remove"):
             self.assertIn("function " + name + "(", item)

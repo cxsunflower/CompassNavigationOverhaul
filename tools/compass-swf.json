@@ -1,9 +1,9 @@
 {
   "swf/Compass.as": "d00fa2e8d948a774a8cb02de61460f2c45b94076c9ae4537ace70ac44a58e7aa",
   "swf/CompassMarkerInfo.as": "2f694fe1da3ccc8ff7b5cd07bc49eaf629e41f8c4b7b29d075aba6a955325cc0",
-  "swf/compass/Debug.as": "78462b96a3607f92ee5ab09c68588e54fa1b61acf89de3e45ce5aee11f7e5bd3",
+  "swf/compass/Debug.as": "d3418403de7efb154cf2bd1a36b48bec642038a03d8c3f77dcc472563ff88070",
   "swf/utils.as": "8c58b07ad84058d7f95dd7e38a29f7d038cde957161013e68e89de694620c76b",
   "tools/build_compass_swf.py": "2835cf57fbd37088ee2e06e1c0293264433189fdefdb3f61fa2f343b18ef8f32",
   "tools/build_questlist_swf.py": "bc6e0261385589d7b556a5c1c91de15a4547dbdfd115a8b4ac12f1d173c88cba",
-  "assets/generated/Compass.before-embedded.swf": "1697c891ac496c5126c02a6663807600e8b50cf7de13ecd166dc8612b9cd9c13"
+  "assets/generated/Compass.before-embedded.swf": "d83c60c9e62bc86ba47b5cdf8b0513b071a782c62d3c203d7a9a124929bb83e2"
 }

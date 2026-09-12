@@ -179,21 +179,8 @@
 					"help": "Horizontal offset from the compass text anchor, in HUD coordinates. Positive moves right; negative moves left. Still follows the compass.\nDefault: 0",
 					"type": "slider",
 					"valueOptions": {
-						"min": -100,
-						"max": 100,
-						"step": 5,
-						"formatString": "{0}",
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "fOffsetY:QuestList",
-					"text": "Y Offset",
-					"help": "Vertical offset from the compass text anchor, in HUD coordinates. Positive moves down; negative moves up. Available height is automatic.\nDefault: 0",
-					"type": "slider",
-					"valueOptions": {
-						"min": -100,
-						"max": 100,
+						"min": -200,
+						"max": 200,
 						"step": 5,
 						"formatString": "{0}",
 						"sourceType": "ModSettingFloat"
@@ -232,8 +219,8 @@
 				},
 				{
 					"id": "bHideInCombat:QuestList",
-					"text": "Hide In Combat",
-					"help": "Hide when the weapon is drawn.\nDefault: Disabled",
+					"text": "Hide With Weapon Drawn",
+					"help": "Hide while the game reports that your weapon is drawn, whether or not you are in combat.\nDefault: Disabled",
 					"type": "toggle",
 					"valueOptions": {
 						"sourceType": "ModSettingBool"

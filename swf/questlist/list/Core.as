@@ -58,7 +58,7 @@ function UpdateAnchor():Void
         minY = Math.min(minY, bounds.yMin);
     }
     var x:Number = anchorText._x + anchorText._width * 0.5 + offsetX;
-    var y:Number = anchorText._y + anchorText._height + anchorGap + offsetY;
+    var y:Number = anchorText._y + anchorText._height + anchorGap;
     if (compassPassengerMode && !dedicatedPanel)
     {
         var viewport:Object = GetViewportBounds();
@@ -79,14 +79,12 @@ function onEnterFrame():Void
     Update();
 }
 
-function SetOffsets(a_x:Number, a_y:Number):Void
+function SetOffsetX(a_x:Number):Void
 {
-    if (isNaN(a_x) || isNaN(a_y) || !isFinite(a_x) || !isFinite(a_y)) return;
-    var nextX:Number = Math.max(-100,Math.min(100,a_x));
-    var nextY:Number = Math.max(-100,Math.min(100,a_y));
-    if (nextX == offsetX && nextY == offsetY) return;
+    if (isNaN(a_x) || !isFinite(a_x)) return;
+    var nextX:Number = Math.max(-200,Math.min(200,a_x));
+    if (nextX == offsetX) return;
     offsetX = nextX;
-    offsetY = nextY;
     fitKey = "";
     UpdateAnchor();
 }
@@ -133,10 +131,10 @@ function Update():Void
             var bounds:Object = entries[i].GetContentBounds(space);
             // Keep a complete header. Long bodies are omitted only after
             // fitting; they must not cause the entire quest to disappear.
-            entries[i]._visible = bounds.yMin >= viewport.yMin &&
+            entries[i]._visible = (overflowStopIndex < 0 || i <= overflowStopIndex) && bounds.yMin >= viewport.yMin &&
                 bounds.xMin >= viewport.xMin && bounds.xMax <= viewport.xMax &&
                 entries[i].GetHeaderBottomInSpace(space) <= limit;
-            entries[i].ApplyHeightLimit(limit,space);
+            // PrepareOverflowLabel already applied (or restored) this final limit.
         }
         lastVisibleBottom = GetVisibleBottomInRoot(limit);
         UpdateViewportMask();

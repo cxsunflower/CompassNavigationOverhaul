@@ -57,9 +57,6 @@ namespace settings::detail
 				using namespace questlist;
 				iniSettingCollection->AddSettings(
 					MakeSetting("fOffsetX:QuestList", offsetX),
-					MakeSetting("fOffsetY:QuestList", offsetY),
-					MakeSetting("fPositionX:QuestList", positionX),
-					MakeSetting("fPositionY:QuestList", positionY),
 					MakeSetting("fTextScale:QuestList", textScale),
 					MakeSetting("bShowInExteriors:QuestList", showInExteriors),
 					MakeSetting("bShowInInteriors:QuestList", showInInteriors),

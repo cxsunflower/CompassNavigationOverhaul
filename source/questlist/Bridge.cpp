@@ -37,7 +37,7 @@ bool QuestItemList::CanBeDisplayed(RE::TESObjectCELL* a_cell, bool a_isPlayerWea
 
 void QuestItemList::UpdateLayout()
 {
-		Invoke("SetOffsets", settings::questlist::offsetX, settings::questlist::offsetY);
+		Invoke("SetOffsetX", settings::questlist::offsetX);
 		Invoke("UpdateAnchor");
 	}
 

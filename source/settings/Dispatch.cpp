@@ -113,22 +113,7 @@ namespace settings
 
 			if (name == "fOffsetX:QuestList")
 			{
-				offsetX = std::max(-100.0F, std::min(100.0F, a_setting->GetFloat()));
-				return;
-			}
-			if (name == "fOffsetY:QuestList")
-			{
-				offsetY = std::max(-100.0F, std::min(100.0F, a_setting->GetFloat()));
-				return;
-			}
-			if (name == "fPositionX:QuestList")
-			{
-				positionX = a_setting->GetFloat();
-				return;
-			}
-			if (name == "fPositionY:QuestList")
-			{
-				positionY = a_setting->GetFloat();
+				offsetX = std::max(-200.0F, std::min(200.0F, a_setting->GetFloat()));
 				return;
 			}
 			if (name == "fTextScale:QuestList")

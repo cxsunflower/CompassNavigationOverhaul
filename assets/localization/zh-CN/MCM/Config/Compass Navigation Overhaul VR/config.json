@@ -179,21 +179,8 @@
 					"help": "相对罗盘文字锚点的横向偏移，单位为界面坐标。正值向右，负值向左；仍跟随罗盘。\n默认：0",
 					"type": "slider",
 					"valueOptions": {
-						"min": -100,
-						"max": 100,
-						"step": 5,
-						"formatString": "{0}",
-						"sourceType": "ModSettingFloat"
-					}
-				},
-				{
-					"id": "fOffsetY:QuestList",
-					"text": "纵向偏移",
-					"help": "相对罗盘文字锚点的纵向偏移，单位为界面坐标。正值向下，负值向上；可用高度自动计算。\n默认：0",
-					"type": "slider",
-					"valueOptions": {
-						"min": -100,
-						"max": 100,
+						"min": -200,
+						"max": 200,
 						"step": 5,
 						"formatString": "{0}",
 						"sourceType": "ModSettingFloat"
@@ -232,8 +219,8 @@
 				},
 				{
 					"id": "bHideInCombat:QuestList",
-					"text": "战斗中隐藏",
-					"help": "拔出武器时隐藏任务列表。\n默认：关闭",
+					"text": "拔出武器时隐藏",
+					"help": "按游戏报告的武器拔出状态隐藏任务列表，与是否处于战斗无关。\n默认：关闭",
 					"type": "toggle",
 					"valueOptions": {
 						"sourceType": "ModSettingBool"

@@ -45,7 +45,7 @@ class BindingsTests(unittest.TestCase):
                 left = content[headers[0][0] + 1:headers[1][0]]
                 right = content[headers[1][0] + 1:]
                 self.assertEqual([item["id"] for item in left], [
-                    "fOffsetX:QuestList", "fOffsetY:QuestList", "fTextScale:QuestList",
+                    "fOffsetX:QuestList", "fTextScale:QuestList",
                     "bShowInExteriors:QuestList", "bShowInInteriors:QuestList", "bHideInCombat:QuestList",
                 ])
                 self.assertEqual([item["id"] for item in right], [
@@ -127,6 +127,33 @@ class BindingsTests(unittest.TestCase):
                 item["help"] = item["help"].replace(label, replacement)
                 self.check(**{language: doc})
                 self.assertTrue(any("help default" in x for x in v.errors))
+
+    def test_retired_positions_absent_horizontal_offset_preserved(self):
+        paths = [ROOT / 'include/Settings.h', ROOT / 'source/settings/Registration.cpp',
+                 ROOT / 'source/settings/Dispatch.cpp', v.MCM_ASSET_DIR / 'settings.ini',
+                 ROOT / 'assets/main/SKSE/Plugins/CompassNavigationOverhaulVR.ini']
+        for path in paths:
+            text = path.read_text(encoding='utf-8-sig')
+            for key in ('fPositionX', 'fPositionY', 'positionX', 'positionY', 'fOffsetY', 'offsetY'):
+                self.assertNotIn(key, text, str(path))
+        source = v.read_settings_bindings()
+        for axis in ('X',):
+            self.assertIn('MakeSetting("fOffset' + axis + ':QuestList", offset' + axis + ')', source)
+            self.assertIn('fOffset' + axis + '=0', self.ini)
+        for doc in (self.en, self.zh):
+            ids = {i.get('id') for p in doc['pages'] for i in p['content'] if i.get('id')}
+            self.assertTrue({'fOffsetX:QuestList'} <= ids)
+            self.assertFalse({'fPositionX:QuestList', 'fPositionY:QuestList', 'fOffsetY:QuestList'} & ids)
+
+    def test_horizontal_offset_range_and_bridge(self):
+        for doc in (self.en, self.zh):
+            item = next(i for p in doc['pages'] for i in p['content'] if i.get('id') == 'fOffsetX:QuestList')
+            self.assertEqual((item['valueOptions']['min'], item['valueOptions']['max'], item['valueOptions']['step']), (-200, 200, 5))
+        dispatch = (ROOT / 'source/settings/Dispatch.cpp').read_text(encoding='utf-8-sig')
+        self.assertIn('offsetX = std::max(-200.0F, std::min(200.0F,', dispatch)
+        bridge = (ROOT / 'source/questlist/Bridge.cpp').read_text(encoding='utf-8-sig')
+        self.assertIn('Invoke("SetOffsetX", settings::questlist::offsetX);', bridge)
+        self.assertNotIn('SetOffsets', bridge)
 
     def test_retired_height_setting_absent(self):
         self.assertNotIn("fMaxHeight", self.ini)

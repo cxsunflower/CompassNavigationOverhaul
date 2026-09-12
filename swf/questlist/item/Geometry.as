@@ -133,13 +133,26 @@
 			canShowHeader = headerBottom + 4 <= a_maxGlobalY;
 		}
 		var canShowRows:Boolean = canShowHeader && (!this.descriptionVisible || this.DescriptionTextField._visible);
+		// The list viewport is shared by every objective in this pass.
+		var viewport:Object;
+		if (this._parent != undefined && this._parent.GetLayoutSpace != undefined && a_space == this._parent.GetLayoutSpace())
+			viewport = this._parent.GetViewportBounds();
 		var visibleRows:Number = 0;
 		for (var i:Number = 0; i < this.ObjectiveItemList.length; i++)
 		{
 			var row:MovieClip = this.ObjectiveItemList[i];
-			var rowBottom:Number = this.TransformBounds(row, {xMin:0, yMin:0,
-				xMax:this.DetailBody.layoutWidth, yMax:row.contentHeight}, a_space).yMax;
-			row._visible = canShowRows && rowBottom + 4 <= a_maxGlobalY;
+			// Include actual child extents, not only the nominal content height.
+			var complete:Object = this.TransformBounds(row, {xMin:0,yMin:0,
+				xMax:this.DetailBody.layoutWidth,yMax:row.contentHeight}, a_space);
+			var textBounds:Object = this.DisplayBounds(row.TextFieldInstance,a_space);
+			var iconBounds:Object = this.DisplayBounds(row.StateIcon,a_space);
+			complete.xMin = Math.min(complete.xMin,Math.min(textBounds.xMin,iconBounds.xMin));
+			complete.yMin = Math.min(complete.yMin,Math.min(textBounds.yMin,iconBounds.yMin));
+			complete.xMax = Math.max(complete.xMax,Math.max(textBounds.xMax,iconBounds.xMax));
+			complete.yMax = Math.max(complete.yMax,Math.max(textBounds.yMax,iconBounds.yMax));
+			row._visible = canShowRows && complete.yMax + 4 <= a_maxGlobalY &&
+				(viewport == undefined || (complete.xMin-4 >= viewport.xMin &&
+					complete.xMax+4 <= viewport.xMax && complete.yMin-4 >= viewport.yMin));
 			canShowRows = row._visible;
 			if (row._visible)
 			{

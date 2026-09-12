@@ -14,7 +14,6 @@ var WarHorseMode:Boolean;
 var anchorText:TextField;
 var anchorGap:Number = 6;
 var offsetX:Number = 0;
-var offsetY:Number = 0;
 
 var SCALE:Number = 65;
 var TEXT_SCALE:Number = 100;
@@ -25,7 +24,8 @@ var fitGeometry:String = "";
 var fitOverflow:Boolean = false;
 var fitRuns:Number = 0;
 var fitReason:String = "not fitted";
-var overflowLabel:TextField;
+var overflowLabel:MovieClip;
+var overflowStopIndex:Number = -1;
 var viewportMask:MovieClip;
 var omissionReason:String = "none";
 var omissionLimit:Number = 0;

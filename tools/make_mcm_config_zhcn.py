@@ -86,8 +86,6 @@ RULES += [
 RULES += [
     ('"text": "X Offset",', '"text": "横向偏移",', 1),
     ('"help": "Horizontal offset from the compass text anchor, in HUD coordinates. Positive moves right; negative moves left. Still follows the compass.\\nDefault: 0",', '"help": "相对罗盘文字锚点的横向偏移，单位为界面坐标。正值向右，负值向左；仍跟随罗盘。\\n默认：0",', 1),
-    ('"text": "Y Offset",', '"text": "纵向偏移",', 1),
-    ('"help": "Vertical offset from the compass text anchor, in HUD coordinates. Positive moves down; negative moves up. Available height is automatic.\\nDefault: 0",', '"help": "相对罗盘文字锚点的纵向偏移，单位为界面坐标。正值向下，负值向上；可用高度自动计算。\\n默认：0",', 1),
 
     ('"text": "Show in Exteriors",', '"text": "室外显示",', 1),
     ('"help": "Show the quest list in exteriors.\\nDefault: Enabled",',
@@ -99,9 +97,9 @@ RULES += [
 ]
 
 RULES += [
-    ('"text": "Hide In Combat",', '"text": "战斗中隐藏",', 1),
-    ('"help": "Hide when the weapon is drawn.\\nDefault: Disabled",',
-     '"help": "拔出武器时隐藏任务列表。\\n默认：关闭",', 1),
+    ('"text": "Hide With Weapon Drawn",', '"text": "拔出武器时隐藏",', 1),
+    ('"help": "Hide while the game reports that your weapon is drawn, whether or not you are in combat.\\nDefault: Disabled",',
+     '"help": "按游戏报告的武器拔出状态隐藏任务列表，与是否处于战斗无关。\\n默认：关闭",', 1),
 ]
 
 # 调试页；保留英文级别名以便与日志对照。

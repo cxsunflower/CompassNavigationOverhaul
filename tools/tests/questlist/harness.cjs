@@ -142,7 +142,7 @@ const js = (raw.slice(0, constructorStart).replace(/^\s*(?:static\s+)?var\s+[A-Z
   .replace(/\bfunction\s+QuestItem\s*\(/g, 'constructor(')
   .replace(/\bfunction\s+([A-Za-z_$][\w$]*)\s*\(/g, '$1(');
 const context = vm.createContext({MovieClip, TextField, Math, Number, String, Object, Array,
-  isNaN, isFinite, flash:{filters:{GlowFilter:class {constructor(...args){this.args=args;}}}}});
+  isNaN, isFinite, flash:{filters:{GlowFilter:class {constructor(...args){this.args=args;this.kind='GlowFilter';}},DropShadowFilter:class {constructor(...args){this.args=args;this.kind='DropShadowFilter';}}}}});
 vm.runInContext(js, context, {filename:'compiled-QuestItem.as'});
 const QuestItem = vm.runInContext('QuestItem', context);
 const pending = {text:'Talk to the steward', completed:false, failed:false};
@@ -237,13 +237,13 @@ function assertDetailInsideOrnament(q) {
     compass.createEmptyMovieClip('DirectionRect')._width=300;
     compass.DirectionRect._height=32;
     Object.assign(list,{entries:[q],anchorText:field,anchorGap:6,Stage:{width:1024,height:1024},
-      overflowLabel:undefined,TextFormat:class {},flash:{filters:{GlowFilter:class {}}},viewportMask:undefined,entriesByKey:{},_root:root,SCALE:65,TEXT_SCALE:110,offsetX:0,offsetY:0,fitKey:'',fitRuns:0,
+      overflowLabel:undefined,overflowStopIndex:-1,TextFormat:class {},flash:{filters:{GlowFilter:class {}}},viewportMask:undefined,entriesByKey:{},_root:root,SCALE:65,TEXT_SCALE:110,offsetX:0,fitKey:'',fitRuns:0,
       effectiveScale:110,effectiveWidth:1,fitGeometry:'',fitReason:'not fitted',fitOverflow:false,
       omissionReason:'none',omissionLimit:0,lastSafeLimit:0,lastVisibleBottom:0,
       calibrationEnabled:false,calibrationAxis:0,calibrationStart:700,calibrationStep:40,calibrationCross:512,calibrationOverlay:undefined,
       dedicatedPanel:false,
       compassPassengerMode:false,compassPassengerConfig:{width:320,height:220,offsetX:40,offsetY:40,scale:110,minScale:90},
-      Math,Number,String,isNaN,isFinite});
+      Math,Number,String,isNaN,isFinite,QuestItem});
     const configMatch=timeline.match(/(?:var\s+)?compassPassengerConfig\s*=\s*(\{[^}]+\})/);
     assert.ok(configMatch,'compiled passenger contract');
     list.compassPassengerConfig=vm.runInNewContext('('+configMatch[1]+')');

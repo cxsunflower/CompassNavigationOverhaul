@@ -29,7 +29,7 @@ function GetPassengerBounds():Object
     if (anchorText != undefined)
     {
         x += anchorText._x+anchorText._width*0.5+offsetX;
-        y += anchorText._y+anchorText._height+anchorGap+offsetY;
+        y += anchorText._y+anchorText._height+anchorGap;
     }
     // This is a logical Stage constraint, not a measured VR mesh UV region.
     var corners:Array = [{x:12,y:GetSharedHudSafeTop()},{x:Stage.width-12,y:GetSharedHudSafeTop()},
@@ -204,10 +204,10 @@ function FitLayout():Void
     UpdateAnchor();
     var viewport:Object = GetViewportBounds();
     var anchor:Object = {x:anchorText._x + anchorText._width * 0.5 + offsetX,
-        y:anchorText._y + anchorText._height + anchorGap + offsetY};
+        y:anchorText._y + anchorText._height + anchorGap};
     _parent.localToGlobal(anchor);
     _root.globalToLocal(anchor);
-    var key:String = Stage.width + "," + Stage.height + "," + TEXT_SCALE + "," + offsetX + "," + offsetY +
+    var key:String = Stage.width + "," + Stage.height + "," + TEXT_SCALE + "," + offsetX +
         "," + Math.floor(anchor.x) + "," + Math.floor(anchor.y) + "," +
         viewport.xMin + "," + viewport.yMin + "," + viewport.xMax + "," + viewport.yMax + "," + compassPassengerMode;
     // Basis lengths detect parent scaling even if the anchor does not move.
@@ -315,7 +315,7 @@ function UpdateViewportMask():Void
     }
     if (overflowLabel != undefined && overflowLabel._visible)
     {
-        var labelBounds:Object = TextBoundsInSpace(overflowLabel,space);
+        var labelBounds:Object = overflowLabel.getBounds(space);
         bounds.xMin = Math.min(bounds.xMin, labelBounds.xMin);
         bounds.xMax = Math.max(bounds.xMax, labelBounds.xMax);
         bounds.yMax = Math.max(bounds.yMax, labelBounds.yMax);

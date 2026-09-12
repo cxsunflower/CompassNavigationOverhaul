@@ -141,12 +141,38 @@ test('details and all three objective states coexist',()=>{
   assert.equal(q.ObjectiveItemList[0].TextFieldInstance.textColor,0xffffff);
   assert.equal(q.ObjectiveItemList[1].TextFieldInstance.textColor,0xbbbbbb);
   assert.equal(q.ObjectiveItemList[2].TextFieldInstance.textColor,0xbbbbbb);
-  assert.equal(q.ObjectiveItemList[0].TextFieldInstance.filters[0].args[2],3);
+  assert.equal(q.ObjectiveItemList[0].TextFieldInstance.filters[0].kind,'DropShadowFilter');
   assert.equal(q.TitleBracket.filters.length,0);
   assert.equal(q.TitleEndPiece.filters.length,0);
   assert.equal(q.ObjectiveItemList[0].StateIcon._width,18);
   assert.equal(q.ObjectiveItemList[0].StateIcon._height,27);
   assert.deepEqual(Array.from(q.ObjectiveItemList[0].StateIcon.filters[0].args),[0,1,4,4,4,2,false,false]);
+});
+
+test('body, objective rows and header use one compass-style shadow without altering icon filters',()=>{
+  for(const label of ['OBJECTIVES','目标']) {
+    const q=create('Wrapped journal details. '.repeat(20),[pending,completed,failed]);
+    q.objectivesLabel=label;
+    q.SetQuestInfo(1,'Title','任务详情与自动换行测试。'.repeat(15),true,[pending,completed,failed],0);
+    function verify() {
+      const fields=[q.DescriptionTextField,q.ObjectivesHeader.Label,...q.ObjectiveItemList.map(r=>r.TextFieldInstance)];
+      for(const field of fields) {
+        assert.equal(field.filters.length,1,'replace, do not stack Glow and shadow');
+        assert.equal(field.filters[0].kind,'DropShadowFilter');
+        assert.deepEqual(Array.from(field.filters[0].args),[2,45,0,1,2,2,1.5,2,false,false,false]);
+      }
+      for(const row of q.ObjectiveItemList) {
+        assert.equal(row.StateIcon.filters[0].kind,'GlowFilter');
+        assert.deepEqual(Array.from(row.StateIcon.filters[0].args),[0,1,4,4,4,2,false,false]);
+      }
+      assert.equal(q.DescriptionTextField.textColor,0xffffff);
+      assert.equal(q.ObjectivesHeader.Label.textColor,0xdddddd);
+      assert.deepEqual(Array.from(q.ObjectiveItemList,r=>r.TextFieldInstance.textColor),[0xffffff,0xbbbbbb,0xbbbbbb]);
+      assert.equal(q.TitleBracket.filters.length,0);assert.equal(q.TitleEndPiece.filters.length,0);
+      assert.equal(q.ObjectivesHeader.Art.filters.length,0);
+    }
+    verify();q.ReflowWidth(0.75);verify();q.ReflowWidth(1);verify();
+  }
 });
 
 test('active objectives stay first, completed history reverses, failed order stays stable',()=>{

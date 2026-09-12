@@ -11,6 +11,7 @@ var debugEventKey:String = "";
 var debugSampleKey:String = "";
 var debugForce:String = "enable";
 var debugSummarySlot:Object;
+var questListGate:String;
 var debugTextBand:Object;
 var debugSuppressed:String = "";
 // Build injects labels from sprite 136. No seeking or guessed stationary pose.
@@ -166,11 +167,11 @@ function DebugPhase():String
 }
 function DebugPhaseText(a_phase:String):String
 {
-    if (a_phase == "IdleShow") return "稳定显示";
-    if (a_phase == "IdleHide") return "已隐藏";
-    if (a_phase == "FadeIn") return "淡入中";
-    if (a_phase == "FadeOut") return "淡出中";
-    return "阶段未知";
+    if (a_phase == "IdleShow") return "Info shown";
+    if (a_phase == "IdleHide") return "Info hidden";
+    if (a_phase == "FadeIn") return "Fade in";
+    if (a_phase == "FadeOut") return "Fade out";
+    return "Unknown";
 }
 
 function DebugOverlap(a:Object,b:Object):Number
@@ -268,6 +269,17 @@ function DebugDraw(a_region:Object):Void
     lines.lineStyle(1,a_region.color,100);
     // Stage clipping is only a logical guard; does not claim a measured UV window.
     var window:Object = {xMin:1,yMin:1,xMax:Stage.width-1,yMax:Stage.height-1};
+    // Q/F/V describe the list, not the whole shared HUD texture. Keep
+    // full geometry in logs, but never draw its out-of-band segments.
+    if (a_region.id == "Q" || a_region.id == "F" || a_region.id == "V")
+    {
+        if (debugTextBand == undefined || !isFinite(debugTextBand.top) ||
+            !isFinite(debugTextBand.bottom)) return;
+        // Inset the 1px stroke so its edge does not straddle the seam.
+        window.yMin = Math.max(window.yMin,debugTextBand.top+1);
+        window.yMax = Math.min(window.yMax,debugTextBand.bottom-1);
+        if (window.yMin >= window.yMax) return;
+    }
     // Clip each segment, not the closed polygon (which would invent boundary edges).
     for (var e:Number = 0; e < points.length; e++)
     {
@@ -298,16 +310,26 @@ function DebugLabels(a_regions:Array,a_status:String,a_warning:String,a_refresh:
     var warning:TextField = DebugField("Warning",14,0xFF5555);
     if (a_refresh) { summary.text = a_status; warning.text = a_warning; }
     summary._visible = false; warning._visible = false;
-    // Fixed screen slots, never attached to the moving readout. Keep a safe slot;
-    // if content enters it, hide immediately instead of chasing the animation.
+    // Cache a slot next to the focused marker border, not a Stage-edge slot.
+    // Palm moves the whole surface; never chase the distance fade animation.
     var width:Number = Math.max(summary.textWidth,warning.textWidth)+8;
     var height:Number = Math.max(summary.textHeight,warning.textHeight)+6;
     if (a_refresh && debugSummarySlot == undefined && debugTextBand != undefined)
     {
-        var candidates:Array = [DebugSlot(12,debugTextBand.top+8,width,height*2),DebugSlot(Stage.width-width-12,debugTextBand.top+8,width,height*2),
-            DebugSlot(12,debugTextBand.bottom-height*2-8,width,height*2),DebugSlot(Stage.width-width-12,debugTextBand.bottom-height*2-8,width,height*2)];
-        for (var c:Number = 0; c < candidates.length; c++)
-            if (debugSummarySlot == undefined && DebugFree(candidates[c],occupied)) debugSummarySlot = candidates[c];
+        var anchor:Object;
+        for (var ar:Number = 0; ar < a_regions.length; ar++)
+            if (a_regions[ar].id == "M" && a_regions[ar].reason == "visible") anchor = a_regions[ar].bounds;
+        if (anchor != undefined)
+        {
+            var y:Number = Math.max(debugTextBand.top+8,Math.min(anchor.yMin,debugTextBand.bottom-height*2-8));
+            var right:Number = anchor.xMax+14;
+            var left:Number = anchor.xMin-width-14;
+            var candidates:Array = [DebugSlot(right,y,width,height*2),
+                DebugSlot(right,debugTextBand.bottom-height*2-8,width,height*2),
+                DebugSlot(left,y,width,height*2),DebugSlot(left,debugTextBand.bottom-height*2-8,width,height*2)];
+            for (var c:Number = 0; c < candidates.length; c++)
+                if (debugSummarySlot == undefined && DebugFree(candidates[c],occupied)) debugSummarySlot = candidates[c];
+        }
     }
     var slot:Object = debugSummarySlot;
     if (slot != undefined && width <= 320 && height <= 30)
@@ -332,10 +354,13 @@ function DebugLabels(a_regions:Array,a_status:String,a_warning:String,a_refresh:
         if (region.reason == "visible" && b != undefined)
         {
             var w:Number = field.textWidth+6; var h:Number = field.textHeight+4;
-            var positions:Array = [DebugSlot(b.xMin,b.yMin-h-5,w,h),DebugSlot(b.xMax+5,b.yMin,w,h),
-                DebugSlot(b.xMin-w-5,b.yMin,w,h),DebugSlot(b.xMin,b.yMax+5,w,h)];
+            // Prefer the right edge, then below/left/above. Never clamp a label
+            // away from its own border into a different part of the HUD surface.
+            var positions:Array = [DebugSlot(b.xMax+5,b.yMin,w,h),DebugSlot(b.xMin,b.yMax+5,w,h),
+                DebugSlot(b.xMin-w-5,b.yMin,w,h),DebugSlot(b.xMin,b.yMin-h-5,w,h)];
             for (var p:Number = 0; p < positions.length && !field._visible; p++)
-                if (DebugFree(positions[p],occupied))
+                if (debugTextBand != undefined && positions[p].yMin >= debugTextBand.top+4 &&
+                    positions[p].yMax <= debugTextBand.bottom-4 && DebugFree(positions[p],occupied))
                 {
                     field._x = positions[p].xMin; field._y = positions[p].yMin;
                     field._width = w; field._height = h; field._visible = true; occupied.push(positions[p]);
@@ -394,7 +419,7 @@ function UpdateDebugOverlay():Void
     var overlap:Number;
     if (regions[0].reason == "visible" && regions[2].reason == "visible") overlap = DebugOverlap(regions[0].bounds,regions[2].bounds);
     var phase:String = DebugPhase();
-    var eventKey:String = gate+"|"+phase+"|"+info.Index+"|"+info.DistanceScale+"|"+info.NameScale+"|"+(overlap > 0);
+    var eventKey:String = String(questListGate)+"|"+gate+"|"+phase+"|"+info.Index+"|"+info.DistanceScale+"|"+info.NameScale+"|"+(overlap > 0);
     for (var i:Number = 0; i < regions.length; i++) eventKey += "|"+regions[i].reason;
     if (observation != undefined) eventKey += "|"+observation.key;
     var transition:Boolean = eventKey != debugEventKey || debugForce != "";
@@ -402,14 +427,15 @@ function UpdateDebugOverlay():Void
     if (gate == "visible")
     {
         for (var d:Number = 0; d < regions.length; d++) DebugDraw(regions[d]);
-        DebugLabels(regions,"距离 "+DebugNumber(info.DistanceScale)+"% · "+DebugPhaseText(phase),
-            overlap > 0 ? "与标记边界重叠 "+DebugNumber(overlap) : "",refresh);
+        DebugLabels(regions,"Distance "+DebugNumber(info.DistanceScale)+"% | "+DebugPhaseText(phase),
+            "QL: "+(questListGate != undefined ? questListGate : "unknown")+
+                (overlap > 0 ? " | Overlap "+DebugNumber(overlap) : ""),refresh);
     }
     else debugSuppressed = "all:"+gate;
     if (refresh) debugLastText = now;
     if (transition || now-debugLastSample >= 200 || now < debugLastSample)
     {
-        var snapshot:String = "listAnimation="+(observation != undefined ? observation.animation : "n/a")+";gate="+gate+";phase="+phase+";frame="+info._currentframe+"/"+info._totalframes+
+        var snapshot:String = "listAnimation="+(observation != undefined ? observation.animation : "n/a")+";questListGate="+questListGate+";gate="+gate+";phase="+phase+";frame="+info._currentframe+"/"+info._totalframes+
             ";configuredScale="+DebugNumber(info.DistanceScale)+","+DebugNumber(info.NameScale)+
             ";distanceMarkerVerticalGap="+DebugNumber(regions[0].bounds != undefined && regions[2].bounds != undefined ? regions[2].bounds.yMin-regions[0].bounds.yMax : undefined)+
             ";distanceMarkerAABBOverlap="+DebugNumber(overlap)+";labelSuppression="+debugSuppressed;

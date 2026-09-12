@@ -42,9 +42,9 @@
 		this.DescriptionTextField.text = details;
 		this.DescriptionTextField.setTextFormat(descriptionFormat);
 		this.DescriptionTextField.textColor = 0xFFFFFF;
-		// Keep a slightly lighter black outline for readability without thickening the white glyphs.
+		// Match the compass name/distance shadow; replace Glow rather than stacking filters.
 		this.DescriptionTextField.filters = [
-			new flash.filters.GlowFilter(0x000000, 1, 3, 3, 3, 2, false, false)
+			new flash.filters.DropShadowFilter(2, 45, 0x000000, 1, 2, 2, 1.5, 2, false, false, false)
 		];
 		this.descriptionVisible = details.length > 0;
 		// Keep the complete journal text; the Box measures it during layout.
@@ -102,7 +102,7 @@
 			label.text = this.objectivesLabel == undefined ? "$OBJECTIVES" : this.objectivesLabel;
 			label.setTextFormat(labelFormat);
 			label.textColor = 0xDDDDDD;
-			label.filters = [new flash.filters.GlowFilter(0x000000, 1, 3, 3, 3, 2, false, false)];
+			label.filters = [new flash.filters.DropShadowFilter(2, 45, 0x000000, 1, 2, 2, 1.5, 2, false, false, false)];
 			var dividerArt:MovieClip = this.ObjectivesHeader.createEmptyMovieClip("Art", this.ObjectivesHeader.getNextHighestDepth());
 			this.DrawDividerWing(dividerArt, "Left", 1, dividerHeight, false);
 			this.DrawDividerWing(dividerArt, "Right", 1, dividerHeight, true);
@@ -149,7 +149,7 @@
 				field.text = objective.text;
 				field.setTextFormat(objectiveFormat);
 				field.textColor = objectiveFormat.color;
-				field.filters = [new flash.filters.GlowFilter(0x000000, 1, 3, 3, 3, 2, false, false)];
+				field.filters = [new flash.filters.DropShadowFilter(2, 45, 0x000000, 1, 2, 2, 1.5, 2, false, false, false)];
 				this.ObjectiveItemList.push(row);
 			}
 		}
